@@ -213,6 +213,8 @@ function MyEditor() {
 
   useEffect(() => {
     const html = getHtml().then(html => {
+      console.log(html, "yooo");
+      
       const blocksFromHTML = convertFromHTML(html || "");
 
       const state = ContentState.createFromBlockArray(
