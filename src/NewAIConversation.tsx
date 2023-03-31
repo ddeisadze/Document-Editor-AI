@@ -10,6 +10,9 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { Box, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, Grid, GridItem, IconButton } from '@chakra-ui/react';
+import { CloseIcon } from '@chakra-ui/icons';
+
 
 const configuration = new Configuration({
     apiKey: "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",
@@ -17,10 +20,14 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-
 export function NewAIConversation(props: {
     handleUpdatePrompt: (updatedText: string) => void | undefined;
     selectedText: string;
+    top: Number | undefined;
+    bottom: Number | undefined;
+    left: Number | undefined;
+    right: Number | undefined;
+    width: string
 }) {
     // const [chatState, setChatState] = useState<ChatState>()
     // const [openAiState, setOpenAiState] = useState<OpenAiState>();
@@ -61,7 +68,6 @@ export function NewAIConversation(props: {
 
     const [aiAnswer, setAiAnswer] = useState<string>("");
 
-
     const handleMessageSend = (question: string) => {
 
         ChatDispatch({
@@ -91,7 +97,6 @@ export function NewAIConversation(props: {
             }
         )
             .then(r => {
-                console.log("chatgpt succ", r);
                 const answer = r.data.choices[0].message as ChatCompletionRequestMessage;
                 setOpenAiState([
                     ...openAiState,
@@ -121,22 +126,49 @@ export function NewAIConversation(props: {
             });
     };
 
+
+    console.log(props)
+
     return <>
-        <ChatContainer>
-            <MessageList typingIndicator={openAiLoading && <TypingIndicator content="AiDox is typing" />}>
-                {chatState.map((item: any) => <Message model={item} />)}
-                {chatState[chatState.length - 1].message?.toLowerCase().includes("updated version") &&
-                    <Message model={{
-                        direction: "incoming",
-                        type: "custom",
-                        position: 'last'
-                    }}>
-                        <Message.CustomContent>
-                            <Button onClick={e => props.handleUpdatePrompt?.call({}, aiAnswer)} border>Add gennerated prompt to Document</Button>
-                        </Message.CustomContent>
-                    </Message>}
-            </MessageList>
-            <MessageInput onSend={e => handleMessageSend(e)} placeholder="Type message here" attachButton={false} />
-        </ChatContainer>
+        <Grid
+            templateAreas={`"header"
+                  "main"
+                  "footer"`}
+            gridTemplateRows={'50px 1fr'}
+            gridTemplateColumns={'1fr'}
+            width="100%"
+            maxWidth={props.width}
+            maxHeight="200px"
+            position="absolute"
+            top={props.top?.toFixed(0)}
+            height={"200px"}
+            gap='1'
+        >
+            <GridItem pl='2' area={'header'}>
+                <IconButton size={"sm"} float={"right"} margin={"5px"} aria-label='Search database' icon={<CloseIcon />} />
+            </GridItem>
+            <GridItem pl='2' area={'main'} maxHeight="500px">
+                <ChatContainer>
+                    <MessageList typingIndicator={openAiLoading && <TypingIndicator content="AiDox is typing" />}>
+                        {chatState.map((item: any) => <Message model={item} />)}
+                        {chatState[chatState.length - 1].message?.toLowerCase().includes("updated version") &&
+                            <Message model={{
+                                direction: "incoming",
+                                type: "custom",
+                                position: 'last'
+                            }}>
+                                <Message.CustomContent>
+                                    <Button onClick={e => props.handleUpdatePrompt?.call({}, aiAnswer)} border>Add generated prompt to Document</Button>
+                                </Message.CustomContent>
+                            </Message>}
+                    </MessageList>
+                    <MessageInput onSend={e => handleMessageSend(e)} placeholder="Type message here" attachButton={false} />
+                </ChatContainer>
+            </GridItem>
+            <GridItem pl='2' area={'footer'}>
+                Footer
+            </GridItem>
+        </Grid>
+
     </>;
 }

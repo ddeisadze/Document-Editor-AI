@@ -14,6 +14,7 @@ import { NewAIConversation } from "./NewAIConversation";
 import createInlineToolbarPlugin from "@draft-js-plugins/inline-toolbar";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { ChakraProvider, Grid, GridItem } from "@chakra-ui/react"
 
 import {
   ItalicButton,
@@ -76,13 +77,30 @@ function MyEditor() {
     EditorState.createEmpty()
   );
 
-  const [selectedTextState, setSelectedTextState] = useState<string>("");
+  const [selectedTextState, setSelectedTextState] = useState(
+    {
+      text: "",
+      top: 0,
+      bottom: 0,
+      right: 0,
+      left: 0
+    }
+  )
   const [selectionStateGlobal, setSelectionState] = useState<SelectionState>();
+
+  const [toolbarStyle, setToolbarStyle] = useState({ display: 'none' });
+
+  // const [aiConversationsChildren, setAiConversationsChildren] = useState<FC<NewAIConversation>[]>
+
 
   // const [plugins, InlineToolbar] = useMemo(() => {
   //   const inlineToolbarPlugin = createInlineToolbarPlugin();
   //   return [[inlineToolbarPlugin], inlineToolbarPlugin.InlineToolbar];
   // }, []);
+
+  const quillRef = React.useRef<ReactQuill>(null);
+
+  let quill = quillRef?.current?.getEditor();
 
   useEffect(() => {
     const html = getHtml().then((html) => {
@@ -95,12 +113,35 @@ function MyEditor() {
 
       handlePasteHTML(html);
 
+      const quill = quillRef?.current?.getEditor();
+
+      if (!quill) {
+        return false;
+      }
+      // const toolbar = quillRef?.current?.toolbar;
+
+      const handleSelectionChange = () => {
+        const selection = quill.getSelection();
+        if (selection) {
+          const bounds = quill.getBounds(selection.index);
+          // setToolbarStyle({ display: 'block', left: bounds.left, top: bounds.bottom });
+        } else {
+          setToolbarStyle({ display: 'none' });
+        }
+      };
+
+      quill.on('selection-change', handleSelectionChange);
+
+      return () => {
+        quill.off('selection-change', handleSelectionChange);
+      };
+
       // setEditorState(EditorState.createWithContent(state));
     });
   }, []);
 
   const handleOnChange = (newState: EditorState) => {
-    
+
   };
 
   const handleUpdatePrompt = (editedText: string) => {
@@ -135,7 +176,7 @@ function MyEditor() {
     return <button>Test</button>;
   };
 
-  const quillRef: any = React.useRef(null);
+
 
   const handlePasteHTML = (html: any) => {
     if (quillRef.current) {
@@ -143,34 +184,101 @@ function MyEditor() {
     }
   };
 
+  const handleBoldClick = () => {
+    const quill = quillRef?.current?.getEditor();
+    quill?.format('bold', true);
+  };
+
+  const handleItalicClick = () => {
+    const quill = quillRef?.current?.getEditor();
+    quill?.format('italic', true);
+  };
+
+  // const handleSelection = (selection) => {
+  // const bounds = quill.getBounds(selection.index);
+  // }
+
+  const commentWidth = "300px"
+
   return (
     <>
       <h1> Chat GPT interaction</h1>
 
-      <p>Selected Text: {selectedTextState}</p>
-
-      <div style={{ position: "relative", height: "200px" }}>
-        {selectedTextState && (
-          <NewAIConversation
-            handleUpdatePrompt={handleUpdatePrompt}
-            selectedText={selectedTextState}
-          />
-        )}
-      </div>
+      <p>Selected Text: {selectedTextState?.text ?? "N/A"}</p>
 
       <h1> Editor</h1>
 
-      <div
-        style={{
-          padding: "10%",
-        }}
+      <Grid
+        marginLeft={"5%"}
+        marginRight={"5%"}
+        templateAreas={`"header header"
+                  "main comments"
+                  "footer comments"`}
+        gridTemplateRows={'50px 1fr 30px'}
+        gridTemplateColumns={`1fr ${commentWidth}`}
+        h='200px'
+        gap='1'
       >
-        {/* <Editor editorState={editorState} onChange={handleOnChange} blockRendererFn={blockRender} plugins={[inlineToolbarPlugin]} /> */}
-        {/* <InlineToolbar> */}
-        {/* {component} */}
-        {/* </InlineToolbar> */}
-        <ReactQuill ref={quillRef} />
-      </div>
+        <GridItem pl='2' area={'header'}>
+          Header
+        </GridItem>
+        <GridItem pl='2' area={'comments'}>
+          {selectedTextState && (
+            <NewAIConversation
+              width={commentWidth}
+              handleUpdatePrompt={handleUpdatePrompt}
+              selectedText={selectedTextState.text}
+              top={selectedTextState?.top}
+              bottom={selectedTextState?.bottom}
+              left={selectedTextState?.left}
+              right={selectedTextState?.right}
+            />
+
+          )}
+        </GridItem>
+        <GridItem pl='2' area={'main'}>
+          <div>
+            {/* <Editor editorState={editorState} onChange={handleOnChange} blockRendererFn={blockRender} plugins={[inlineToolbarPlugin]} /> */}
+            {/* <InlineToolbar> */}
+            {/* {component} */}
+            {/* </InlineToolbar> */}
+            <div style={toolbarStyle}>
+              <button onClick={handleBoldClick}>Bold</button>
+              <button onClick={handleItalicClick}>Italic</button>
+            </div>
+            <ReactQuill ref={quillRef} onChangeSelection={(e, b, c,) => {
+              if (e?.length ?? 0 > 0) {
+                var text = quill?.getText(e?.index, e?.length);
+                const bounds = quillRef.current?.editor?.getBounds(e?.index ?? 0);
+
+                const editingArea = quillRef.current?.getEditingArea().getBoundingClientRect();
+
+                const scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+                const selection = window.getSelection();
+                const range = selection?.getRangeAt(0);
+                const boundingRect = range?.getBoundingClientRect();
+
+                console.log(scrollTop);
+
+                setSelectedTextState({
+                  text: text ?? "",
+                  top: (boundingRect?.top ?? 0) + scrollTop,
+                  bottom: boundingRect?.bottom ?? 0,
+                  right: boundingRect?.right ?? 0,
+                  left: (boundingRect?.left ?? 0) + scrollLeft,
+                })
+
+              }
+            }} />
+          </div>
+        </GridItem>
+        <GridItem pl='2' area={'footer'}>
+          Footer
+        </GridItem>
+      </Grid>
+
     </>
   );
 }
@@ -178,7 +286,9 @@ function MyEditor() {
 function App() {
   return (
     <div className="App">
-      <MyEditor />
+      <ChakraProvider>
+        <MyEditor />
+      </ChakraProvider>
     </div>
   );
 }
