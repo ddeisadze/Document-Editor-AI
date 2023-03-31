@@ -4,7 +4,12 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
+<<<<<<< HEAD
     "@chakra-ui/react": "^2.5.5",
+=======
+    "@chakra-ui/icons": "^2.0.18",
+    "@chakra-ui/react": "^2.5.4",
+>>>>>>> 1c873bfbdd867adc3da165a609e82fb4f425b809
     "@chatscope/chat-ui-kit-react": "^1.10.1",
     "@chatscope/chat-ui-kit-styles": "^1.4.0",
     "@draft-js-plugins/editor": "^4.1.3",
@@ -22,6 +27,7 @@
     "@types/node": "^16.18.19",
     "@types/react": "^18.0.29",
     "@types/react-dom": "^18.0.11",
+    "add": "^2.0.6",
     "babel-jest": "^27.4.2",
     "babel-loader": "^8.2.3",
     "babel-plugin-named-asset-import": "^0.3.8",
@@ -83,7 +89,8 @@
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
-    "workbox-webpack-plugin": "^6.4.1"
+    "workbox-webpack-plugin": "^6.4.1",
+    "yarn": "^1.22.19"
   },
   "scripts": {
     "start": "node scripts/start.js",
