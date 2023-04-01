@@ -1,24 +1,15 @@
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mammoth from "mammoth";
 import { NewAIConversation } from "./NewAIConversation";
+import ReactQuill, { Quill, ReactQuillProps } from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { ChakraProvider, Grid, GridItem } from "@chakra-ui/react";
+import { EditorState, Modifier, SelectionState } from "draft-js";
 import ReactQuill, { Quill, Range } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./App.css"
 import { ChakraProvider, Grid, GridItem, Text, VStack } from "@chakra-ui/react"
-
-import {
-  ItalicButton,
-  BoldButton,
-  UnderlineButton,
-  CodeButton,
-  HeadlineOneButton,
-  HeadlineTwoButton,
-  HeadlineThreeButton,
-  UnorderedListButton,
-  OrderedListButton,
-  BlockquoteButton,
-  CodeBlockButton,
-} from "@draft-js-plugins/buttons";
+import inlineToolbar from "./inlineToolbar";
 import DocumentTitle from "./LoginTitle";
 
 const resumeFileName = `http://localhost:3000/resume.docx`;
@@ -32,8 +23,6 @@ async function getHtml() {
     .convertToHtml({ arrayBuffer: arrBuffer })
     .then(function (result) {
       var html = result.value;
-      // var messages = result.messages;
-
       return html;
     })
     .catch((err) => console.log("error", err));
@@ -50,12 +39,14 @@ interface aiConvoComponents {
 function MyEditor() {
   const [toolbarStyle, setToolbarStyle] = useState({ display: 'none' });
 
+  const [showWand, setShowWand] = useState(false);
+
   const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
 
   const [lastModified, setLastModified] = useState<Date>();
 
 
-  const quillRef = React.useRef<ReactQuill>(null);
+  const quillRef = React.useRef<ReactQuill | null>(null);
 
   let quill = quillRef?.current?.getEditor();
 
@@ -69,46 +60,23 @@ function MyEditor() {
         return false;
       }
 
-      const handleSelectionChange = () => {
-        const selection = quill.getSelection();
-        if (selection) {
-          const bounds = quill.getBounds(selection.index);
-          // setToolbarStyle({ display: 'block', left: bounds.left, top: bounds.bottom });
-        } else {
-          setToolbarStyle({ display: 'none' });
-        }
-      };
-
-      quill.on('selection-change', handleSelectionChange);
-
-      return () => {
-        quill.off('selection-change', handleSelectionChange);
-      };
     });
   }, []);
 
-  const handleUpdatePrompt = (editedText: string) => {
-
-    if (!editedText) {
-      return;
-    }
-
-  };
-
-  const component = () => {
-    return <button>Test</button>;
-  };
 
   const handleChange = (): void => {
     setLastModified(new Date());
   };
 
-
-
   const handlePasteHTML = (html: any) => {
+    // console.log(quillRef.current);
+    // console.log("yoo");
+    // console.log("yoo");
+
     if (quillRef.current) {
       quillRef.current.getEditor().clipboard.dangerouslyPasteHTML(0, html);
     }
+    // console.log(quillRef.current ? quillRef.current.value : null);
   };
 
   const commentWidth = "300px"
@@ -119,8 +87,15 @@ function MyEditor() {
       quillRef.current?.editor?.removeFormat(componentToRemove.range?.index ?? 0, componentToRemove.range?.length ?? 0)
 
       return prev.filter(i => i.key != key)
+    })
+  };
+
+  const handleOnAiUpdatedPrompt = (editedText: string) => {
+
+    if (!editedText) {
+      return;
     }
-    )
+
   };
 
   return (
@@ -191,6 +166,8 @@ function MyEditor() {
 
                   const key = new Date().getTime().toString();
 
+                  setShowWand(true);
+
                   setAiConversationsChildren([
                     ...aiConversationsChildren,
                     {
@@ -199,7 +176,7 @@ function MyEditor() {
                       componenet: <NewAIConversation
                         key={key}
                         width={commentWidth}
-                        handleUpdatePrompt={handleUpdatePrompt}
+                        handleUpdatePrompt={handleOnAiUpdatedPrompt}
                         onRemoveComponent={() => removeAiConvo(key)}
                         selectedText={selectedAttrs.text}
                         top={selectedAttrs.top}
@@ -213,14 +190,18 @@ function MyEditor() {
               }} />
           </div>
         </GridItem>
-        <GridItem pl='2' area={'footer'}>
+        <GridItem pl="2" area={"footer"}>
           Footer
         </GridItem>
       </Grid>
-
+      {/* {inlineToolbar(selectedTextState, showWand)} */}
     </>
   );
+
+
 }
+
+
 
 function App() {
   return (

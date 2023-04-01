@@ -1,3 +1,55 @@
+.wandContainer {
+  height: fit-content;
+  width: fit-content;
+  padding: 3px 6px;
+  background-color: black;
+  border-radius: 7px;
+}
+
+.wandContainer:hover {
+  background-color: rgba(0, 0, 0, .95);
+  transition: background-color .2s ease-in;
+  border-radius: 7px 7px 0px 0px;
+  cursor: pointer;
+
+
+}
+
+.bubble-float-bottom {
+  display: inline-block;
+  position: relative;
+  transition-duration: .3s;
+  transition-property: transform;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  transform: translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+}
+
+.bubble-float-bottom:before {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  content: '';
+  left: calc(50% - 14px);
+  bottom: -9px;
+  border-style: solid;
+  border-width: 10px 14.2px 0px 14.2px;
+  border-color: #10a33f transparent transparent transparent;
+  transition-duration: .3s;
+  transition-property: bottom;
+}
+
+.bubble-float-bottom:hover {
+  transform: translateY(-8px) translateZ(0);
+}
+
+.bubble-float-bottom:hover:before {
+  bottom: -(10px);
+  display: block;
+
+}
+
 .ql-editor span[style*="background-color"]:hover {
   /* cursor: pointer; */
   animation: glowing 2s ease-in-out;
