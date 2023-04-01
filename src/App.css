@@ -1,38 +1,51 @@
-.App {
-  text-align: center;
+.wandContainer {
+  height: fit-content;
+  width: fit-content;
+  padding: 3px 6px;
+  background-color: black;
+  border-radius: 7px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.wandContainer:hover {
+  background-color: rgba(0,0,0, .95);
+  transition: background-color .2s ease-in;
+  border-radius: 7px 7px 0px 0px;
+  cursor: pointer;
+
+
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.bubble-float-bottom {
+	display: inline-block;
+	position: relative;
+	transition-duration: .3s;
+	transition-property: transform;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	transform: translateZ(0);
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0);
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.bubble-float-bottom:before {
+  display: none;
+	pointer-events: none;
+	position: absolute;
+	z-index: -1;
+	content: '';
+	left: calc(50% - 14px);
+  bottom: -9px;
+  border-style: solid;
+  border-width: 10px 14.2px 0px 14.2px;
+	border-color: #10a33f transparent transparent transparent;
+	transition-duration: .3s;
+	transition-property: bottom;
 }
 
-.App-link {
-  color: #61dafb;
+.bubble-float-bottom:hover {
+	transform: translateY(-8px) translateZ(0);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.bubble-float-bottom:hover:before {
+	bottom: -(10px);
+  display: block;
+
 }
