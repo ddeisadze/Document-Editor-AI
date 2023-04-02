@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from 'react';
+import React, { useReducer, useState, useEffect } from 'react';
 import {
     ChatContainer,
     MessageList,
@@ -27,14 +27,13 @@ export function NewAIConversation(props: {
     bottom: Number | undefined;
     left: Number | undefined;
     right: Number | undefined;
-    width: string
+    width: string;
+    openConvoKey: String | undefined;
+    componentKey: string;
+    setOpenConvoKey: React.Dispatch<React.SetStateAction<String | undefined>>;
 }) {
-    // const [chatState, setChatState] = useState<ChatState>()
-    // const [openAiState, setOpenAiState] = useState<OpenAiState>();
 
-    console.log(props.selectedText, "selected text")
-    console.log(`Here is the prompt: ${props.selectedText}`)
-
+    
     const openAiDefaultValue: ChatCompletionRequestMessage[] = [
         {
             role: 'system',
@@ -70,7 +69,28 @@ export function NewAIConversation(props: {
 
     const [aiAnswer, setAiAnswer] = useState<string>("");
 
-    const [isMinimized, setMinimized] = useBoolean(false)
+    const [isMinimized, setMinimized] = useState<boolean>(false)
+    useEffect(() => {
+        
+        // console.log(props.openConvoKey, "helooooo",props.componentKey, props.openConvoKey != props.componentKey, isMinimized, isMinimized ? "hi" : "yo");
+        if (props.openConvoKey) {
+            setMinimized(props.openConvoKey != props.componentKey)
+        }
+      }, [props.openConvoKey]);
+    useEffect(() => {
+        if (!isMinimized) {
+            props.setOpenConvoKey(props.componentKey)
+        }
+        // !isMinimized ? props.setOpenConvoKey(props.componentKey) : null;
+        // console.log(props.openConvoKey, "helooooo",props.componentKey, props.openConvoKey != props.componentKey, isMinimized, isMinimized ? "hi" : "yo");
+            
+          }, [isMinimized]);
+
+    // console.log(props.openConvoKey, "helooooo",props.componentKey, props.openConvoKey != props.componentKey, isMinimized, isMinimized ? "hi" : "yo");
+
+    // console.log("gafasadasd", props.isOpen, props.componentKey);
+
+    
 
     const handleMessageSend = (question: string) => {
 
@@ -131,14 +151,13 @@ export function NewAIConversation(props: {
     };
 
 
-    console.log(props)
 
     return <>
-        {isMinimized
+        {(isMinimized)
             ? <IconButton position="absolute"
                 float={"left"}
                 top={props.top?.toFixed(0)}
-                size={"sm"} aria-label='Search database' icon={<ChatIcon onClick={setMinimized.toggle} />} />
+                size={"sm"} aria-label='Search database' icon={<ChatIcon onClick={() => setMinimized(!isMinimized)} />} />
             : <Grid
                 templateAreas={`"header"
                   "main"
@@ -147,14 +166,14 @@ export function NewAIConversation(props: {
                 gridTemplateColumns={'1fr'}
                 width="100%"
                 maxWidth={props.width}
-                maxHeight="200px"
+                maxHeight="275px"
                 position="absolute"
                 top={props.top?.toFixed(0)}
-                height={"200px"}
+                height={"275px"}
                 gap='1'
             >
                 <GridItem pl='2' area={'header'}>
-                    <IconButton size={"sm"} float={"right"} margin={"5px"} aria-label='Search database' icon={<MinusIcon onClick={setMinimized.toggle} />} />
+                    <IconButton size={"sm"} float={"right"} margin={"5px"} aria-label='Search database' icon={<MinusIcon onClick={() => setMinimized(!isMinimized)} />} />
                 </GridItem>
                 <GridItem pl='2' area={'main'} maxHeight="500px">
                     <ChatContainer>

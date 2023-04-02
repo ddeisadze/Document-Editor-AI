@@ -5,11 +5,13 @@ import { Grid, GridItem, Text, useDimensions } from "@chakra-ui/react";
 import InlineToolbar from "./inlineToolbar";
 import DocumentTitle from "./LoginTitle";
 import { getHtml } from "./utility/helpers";
+// import AiConvoManager from "./aiConvoManager";
 
 export interface aiConvoComponents {
-    key: string,
-    componenet: JSX.Element,
-    range: Range
+    componentKey: string,
+    component: JSX.Element,
+    range: Range,
+    // isOpen: Boolean
 }
 
 export function MyEditor() {
@@ -17,18 +19,17 @@ export function MyEditor() {
     const [showInlineToolbar, setShowInlineToolbar] = useState<JSX.Element | null>(null);
     const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
     const [lastModified, setLastModified] = useState<Date>();
+    const [openConvoKey, setOpenConvoKey] = useState<String>();
+
 
     // const gridElementRef = useRef()
     const quillRef = React.useRef<ReactQuill | null>(null);
-    console.log(quillRef.current?.editingArea, "area")
     // const gridElementRef = useRef<HTMLDivElement>(quillRef.current?.editingArea as HTMLDivElement);
     const gridElementRef = React.useRef<HTMLDivElement>(null);
 
     const z = useDimensions(gridElementRef, true);
 
-    console.log("dimensions", z)
 
-    console.log(quillRef.current?.editingArea as HTMLElement, "editing area")
     const commentWidth = "300px";
 
     useEffect(() => {
@@ -49,10 +50,12 @@ export function MyEditor() {
 
     const removeAiConvo = (key: string) => {
         setAiConversationsChildren((prev) => {
-            const componentToRemove = prev.filter(i => i.key == key)[0];
+            const componentToRemove = prev.filter(i => i.componentKey == key)[0];
+            console.log(componentToRemove);
+            
             quillRef.current?.editor?.removeFormat(componentToRemove.range?.index ?? 0, componentToRemove.range?.length ?? 0);
 
-            return prev.filter(i => i.key != key);
+            return prev.filter(i => i.componentKey != key);
         });
     };
 
@@ -73,14 +76,17 @@ export function MyEditor() {
     }) => {
 
         const key = new Date().getTime().toString();
+        console.log(key,  );
+        setOpenConvoKey(key)
 
+        
         setAiConversationsChildren([
             ...aiConversationsChildren,
             {
                 range: range,
-                key: key,
-                componenet: <NewAIConversation
-                    key={key}
+                componentKey: key,
+                component: <NewAIConversation
+                    componentKey={key}
                     width={commentWidth}
                     handleUpdatePrompt={handleOnAiUpdatedPrompt}
                     onRemoveComponent={() => removeAiConvo(key)}
@@ -88,12 +94,52 @@ export function MyEditor() {
                     top={selectedAttrs.top}
                     bottom={selectedAttrs.bottom}
                     left={selectedAttrs.left}
-                    right={selectedAttrs.right} />
+                    right={selectedAttrs.right}
+                    openConvoKey={openConvoKey} 
+                    setOpenConvoKey={setOpenConvoKey}/>
+                    ,
+                // isOpen: true,
+
+                
+
             }
         ]);
+        // setAiConversationsChildren(prev => {
+        //     return prev.map(conversation => {
+        //         console.log(conversation, "yoooooooooooooooo");
+
+        //       if (conversation.componentKey === key) {                
+        //         return {
+        //           ...conversation,
+        //           conversation.component. false
+        //         };
+        //       } else {
+        //         // console.log(conversation.componentKey, "yoooooooooooooooo");
+
+        //         return {
+        //           ...conversation,
+        //           isOpen: false
+        //         };
+        //       }
+        //     });
+        //   });
 
         setShowInlineToolbar(null);
     };
+
+    useEffect(() => {
+        setAiConversationsChildren(prevChildren => {
+          return prevChildren.map(child => {
+            
+              // Update openConvoKey prop
+              return {
+                ...child,
+                component: React.cloneElement(child.component, { openConvoKey: openConvoKey })
+              }
+            
+          })
+        })
+      }, [openConvoKey])
 
     return (
         <>
@@ -119,7 +165,7 @@ export function MyEditor() {
                         </Text>)}
                 </GridItem>
                 <GridItem pl='2' area={'comments'} maxHeight="100%" overflowY="auto">
-                    {aiConversationsChildren.map(i => i.componenet)}
+                    {aiConversationsChildren.map(i => i.component)}
                 </GridItem>
                 <GridItem pl='2' area={'main'} marginTop="1rem">
                     <div ref={gridElementRef}>
@@ -154,7 +200,6 @@ export function MyEditor() {
                                         left: (boundingRect?.left ?? 0) + scrollLeft,
                                     };
 
-                                    console.table(selectedAttrs)
 
                                     const format = {
                                         background: "rgb(124, 114, 227)" // set background color to yellow
