@@ -1,224 +1,261 @@
 import React, { useEffect, useRef, useState } from "react";
 import { NewAIConversation } from "./NewAIConversation";
-import ReactQuill, { Range } from "react-quill";
-import { Grid, GridItem, Text, useDimensions } from "@chakra-ui/react";
+import ReactQuill, { Range, UnprivilegedEditor, Quill } from "react-quill";
+import { Box, Button, Flex, Grid, GridItem, Spacer, Text, useBoolean, useDimensions, useOutsideClick } from "@chakra-ui/react";
 import InlineToolbar from "./inlineToolbar";
 import DocumentTitle from "./LoginTitle";
-import { getHtml } from "./utility/helpers";
+import { getHtml, getPdfFileFromHtml } from "./utility/helpers";
+import { saveAs } from 'file-saver';
+import { pdfExporter } from 'quill-to-pdf';
+import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
+import { jsPDF } from "jspdf"
+import html2canvas from "html2canvas"
+import { DeltaStatic } from "quill";
+// import htmlPdf from "html-pdf"
 export interface aiConvoComponents {
-  componentKey: string;
-  component: JSX.Element;
-  range: Range;
+    componentKey: string;
+    component: JSX.Element;
+    range: Range;
 }
 
 export function MyEditor() {
-  const [toolbarStyle, setToolbarStyle] = useState({ display: "none" });
-  const [showInlineToolbar, setShowInlineToolbar] =
-    useState<JSX.Element | null>(null);
-  const [aiConversationsChildren, setAiConversationsChildren] = useState<
-    aiConvoComponents[]
-  >([]);
-  const [lastModified, setLastModified] = useState<Date>();
-  const [openConvoKey, setOpenConvoKey] = useState<String>();
+    const [toolbarStyle, setToolbarStyle] = useState({ display: "none" });
+    const [showInlineToolbar, setShowInlineToolbar] =
+        useState<JSX.Element | null>(null);
+    const [aiConversationsChildren, setAiConversationsChildren] = useState<
+        aiConvoComponents[]
+    >([]);
+    const [lastModified, setLastModified] = useState<Date>();
+    const [openConvoKey, setOpenConvoKey] = useState<String>();
 
-  const quillRef = React.useRef<ReactQuill | null>(null);
-  const gridElementRef = React.useRef<HTMLDivElement>(null);
+    const quillRef = React.useRef<ReactQuill | null>(null);
+    const gridElementRef = React.useRef<HTMLDivElement>(null);
 
-  const z = useDimensions(gridElementRef, true);
+    const z = useDimensions(gridElementRef, true);
 
-  const commentWidth = "300px";
+    const commentWidth = "300px";
 
-  useEffect(() => {
-    getHtml().then((html) => {
-      handlePasteHTML(html);
-    });
-  }, []);
+    const toolbarDivRef = React.useRef(null)
+    useOutsideClick({
+        ref: toolbarDivRef,
+        handler: () => {
+            setShowInlineToolbar(null);
+        }
+    })
 
-  const handleChange = (): void => {
-    setLastModified(new Date());
-  };
+    useEffect(() => {
+        getHtml().then((html) => {
+            handlePasteHTML(html);
+        });
 
-  const handlePasteHTML = (html: any) => {
-    if (quillRef.current) {
-      quillRef.current.getEditor().clipboard.dangerouslyPasteHTML(0, html);
-    }
-  };
+        // remove toolbar on any click
+        // document.addEventListener('mousedown', hideToolBar);
+    }, []);
 
-  const removeAiConvo = (key: string) => {
-    setAiConversationsChildren((prev) => {
-      const componentToRemove = prev.filter((i) => i.componentKey == key)[0];
+    const handleChange = (): void => {
+        setLastModified(new Date());
+    };
 
-      quillRef.current?.editor?.removeFormat(
-        componentToRemove.range?.index ?? 0,
-        componentToRemove.range?.length ?? 0
-      );
+    const handlePasteHTML = (html: any) => {
+        if (quillRef.current) {
+            quillRef.current.getEditor().clipboard.dangerouslyPasteHTML(0, html);
+        }
+    };
 
-      return prev.filter((i) => i.componentKey != key);
-    });
-  };
+    const removeAiConvo = (key: string) => {
+        setAiConversationsChildren((prev) => {
+            const componentToRemove = prev.filter((i) => i.componentKey == key)[0];
 
-  const handleOnAiUpdatedPrompt = (editedText: string) => {
-    if (!editedText) {
-      return;
-    }
-  };
+            quillRef.current?.editor?.removeFormat(
+                componentToRemove.range?.index ?? 0,
+                componentToRemove.range?.length ?? 0
+            );
 
-  const onLaunchAiClicked = (
-    range: Range,
-    selectedAttrs: {
-      text: string;
-      top: Number;
-      bottom: Number;
-      left: Number;
-      right: Number;
-    }
-  ) => {
-    const key = new Date().getTime().toString();
-    setOpenConvoKey(key);
+            return prev.filter((i) => i.componentKey != key);
+        });
+    };
 
-    setAiConversationsChildren([
-      ...aiConversationsChildren,
-      {
-        range: range,
-        componentKey: key,
-        component: (
-          <NewAIConversation
-            componentKey={key}
-            width={commentWidth}
-            handleUpdatePrompt={handleOnAiUpdatedPrompt}
-            onRemoveComponent={() => removeAiConvo(key)}
-            selectedText={selectedAttrs.text}
-            top={selectedAttrs.top}
-            bottom={selectedAttrs.bottom}
-            left={selectedAttrs.left}
-            right={selectedAttrs.right}
-            openConvoKey={openConvoKey}
-            setOpenConvoKey={setOpenConvoKey}
-          />
-        ),
-      },
-    ]);
+    const handleOnAiUpdatedPrompt = (editedText: string) => {
+        if (!editedText) {
+            return;
+        }
 
-    setShowInlineToolbar(null);
-  };
+        console.log(editedText);
 
-  useEffect(() => {
-    setAiConversationsChildren((prevChildren) => {
-      return prevChildren.map((child) => {
-        // Update openConvoKey prop
-        return {
-          ...child,
-          component: React.cloneElement(child.component, {
-            openConvoKey: openConvoKey,
-          }),
+    };
+
+    const onLaunchAiClicked = (
+        range: Range,
+        selectedAttrs: {
+            text: string;
+            top: Number;
+            bottom: Number;
+            left: Number;
+            right: Number;
+        }
+    ) => {
+        const key = new Date().getTime().toString();
+        setOpenConvoKey(key);
+
+        const format = {
+            background: "rgb(124, 114, 227)" // set background color to yellow
         };
-      });
-    });
-  }, [openConvoKey]);
 
-  return (
-    <>
-      <Grid
-        marginLeft={"5%"}
-        marginRight={"5%"}
-        templateAreas={`"header header"
+        if (range) {
+            quillRef?.current?.editor?.formatText(range, format); // apply new background color format
+        }
+
+        setAiConversationsChildren([
+            ...aiConversationsChildren,
+            {
+                range: range,
+                componentKey: key,
+                component: (
+                    <NewAIConversation
+                        componentKey={key}
+                        width={commentWidth}
+                        handleUpdatePrompt={handleOnAiUpdatedPrompt}
+                        onRemoveComponent={() => removeAiConvo(key)}
+                        selectedText={selectedAttrs.text}
+                        top={selectedAttrs.top}
+                        bottom={selectedAttrs.bottom}
+                        left={selectedAttrs.left}
+                        right={selectedAttrs.right}
+                        openConvoKey={openConvoKey}
+                        setOpenConvoKey={setOpenConvoKey}
+                    />
+                ),
+            },
+        ]);
+
+        setShowInlineToolbar(null);
+    };
+
+    useEffect(() => {
+        setAiConversationsChildren((prevChildren) => {
+            return prevChildren.map((child) => {
+                // Update openConvoKey prop
+                return {
+                    ...child,
+                    component: React.cloneElement(child.component, {
+                        openConvoKey: openConvoKey,
+                    }),
+                };
+            });
+        });
+    }, [openConvoKey]);
+
+    return (
+        <>
+            <Grid
+                marginLeft={"5%"}
+                marginRight={"5%"}
+                templateAreas={`"header header"
                   "main comments"
                   "footer comments"`}
-        gridTemplateRows={"50px 1fr 30px"}
-        gridTemplateColumns={`1fr ${commentWidth}`}
-        gap="1"
-      >
-        <GridItem pl="2" area={"header"}>
-          <DocumentTitle />
-          {lastModified && (
-            <Text
-              fontSize="sm"
-              color="gray"
-              fontStyle="italic"
-              marginBottom="0.5rem"
+                gridTemplateRows={'50px 1fr 40px'}
+                gridTemplateColumns={`1fr ${commentWidth}`}
+                gap='1'
             >
-              Last modified: {lastModified.toLocaleString()}
-            </Text>
-          )}
-        </GridItem>
-        <GridItem pl="2" area={"comments"} maxHeight="100%" overflowY="auto">
-          {aiConversationsChildren.map((i) => i.component)}
-        </GridItem>
-        <GridItem pl="2" area={"main"} marginTop="1rem">
-          <div ref={gridElementRef}>
-            <ReactQuill
-              ref={quillRef}
-              onChange={handleChange}
-              onChangeSelection={(range) => {
-                if (range?.length ?? 0 > 0) {
-                  var text = quillRef.current?.editor?.getText(
-                    range?.index,
-                    range?.length
-                  );
-                  const bounds = quillRef.current?.editor?.getBounds(
-                    range?.index ?? 0
-                  );
+                <GridItem pl='2' area={'header'}>
+                    <DocumentTitle />
+                    {lastModified && (
+                        <Text
+                            fontSize="sm"
+                            color="gray"
+                            fontStyle="italic"
+                            marginBottom="0.5rem">
+                            Last modified: {lastModified.toLocaleString()}
+                        </Text>)}
+                </GridItem>
+                <GridItem pl='2' area={'comments'} maxHeight="100%" overflowY="auto">
+                    {aiConversationsChildren.map(i => i.component)}
+                </GridItem>
+                <GridItem pl='2' area={'main'} marginTop="1rem">
+                    <ReactQuill ref={quillRef}
+                        onChange={handleChange}
+                        onChangeSelection={(range) => {
+                            if (range?.length ?? 0 > 0) {
+                                var text = quillRef.current?.editor?.getText(range?.index, range?.length);
+                                const bounds = quillRef.current?.editor?.getBounds(range?.index ?? 0);
 
-                  const editingArea = quillRef.current
-                    ?.getEditingArea()
-                    .getBoundingClientRect();
+                                const editingArea = quillRef.current?.getEditingArea().getBoundingClientRect();
 
-                  const scrollLeft =
-                    document.documentElement.scrollLeft ||
-                    document.body.scrollLeft;
-                  const scrollTop =
-                    document.documentElement.scrollTop ||
-                    document.body.scrollTop;
+                                const scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+                                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
 
-                  const windowSelection = window.getSelection();
-                  const windowRange = windowSelection?.getRangeAt(0);
-                  const boundingRect = windowRange?.getBoundingClientRect();
+                                const windowSelection = window.getSelection();
+                                const windowRange = windowSelection?.getRangeAt(0);
+                                const boundingRect = windowRange?.getBoundingClientRect();
 
-                  const container = windowRange?.commonAncestorContainer;
-                  const selectedElement = container?.parentElement as Element;
-                  const elementStyles =
-                    window.getComputedStyle(selectedElement);
-                  const elementLineHeight = parseFloat(
-                    elementStyles?.lineHeight
-                  );
+                                const container = windowRange?.commonAncestorContainer;
+                                const selectedElement = container?.parentElement as Element;
+                                const elementStyles = window.getComputedStyle(selectedElement);
+                                const elementLineHeight = parseFloat(elementStyles?.lineHeight);
 
-                  const selectedAttrs = {
-                    text: text ?? "",
-                    top: (boundingRect?.top ?? 0) + scrollTop,
-                    bottom: boundingRect?.bottom ?? 0,
-                    right: boundingRect?.right ?? 0,
-                    left: (boundingRect?.left ?? 0) + scrollLeft,
-                  };
+                                const selectedAttrs = {
+                                    text: text ?? "",
+                                    top: (boundingRect?.top ?? 0) + scrollTop,
+                                    bottom: boundingRect?.bottom ?? 0,
+                                    right: boundingRect?.right ?? 0,
+                                    left: (boundingRect?.left ?? 0) + scrollLeft,
+                                };
 
-                  const format = {
-                    background: "rgb(124, 114, 227)", // set background color to yellow
-                  };
+                                console.table(selectedAttrs)
 
-                  if (range) {
-                    quillRef?.current?.editor?.formatText(range, format); // apply new background color format
-                  }
+                                const format = {
+                                    background: "rgb(124, 114, 227)" // set background color to yellow
+                                };
 
-                  const toolbarComponenet = (
-                    <InlineToolbar
-                      top={selectedAttrs.top}
-                      bottom={selectedAttrs.bottom}
-                      left={selectedAttrs.left}
-                      right={selectedAttrs.right}
-                      lineHeight={elementLineHeight}
-                      onClick={() => onLaunchAiClicked(range, selectedAttrs)}
+                                if (range) {
+                                    quillRef?.current?.editor?.formatText(range, format); // apply new background color format
+                                }
+
+                                const toolbarComponenet = <InlineToolbar
+                                    top={selectedAttrs.top}
+                                    bottom={selectedAttrs.bottom}
+                                    left={selectedAttrs.left}
+                                    right={selectedAttrs.right}
+                                    lineHeight={elementLineHeight}
+                                    onClick={() => onLaunchAiClicked(range, selectedAttrs)} />;
+
+                                setShowInlineToolbar(toolbarComponenet);
+                            }
+                        }}
                     />
-                  );
-                  setShowInlineToolbar(toolbarComponenet);
-                }
-              }}
-            />
-          </div>
-        </GridItem>
-        <GridItem pl="2" area={"footer"}>
-          Footer
-        </GridItem>
-      </Grid>
-      {showInlineToolbar}
-    </>
-  );
+                </GridItem>
+                <GridItem pl="2" area="footer" position="sticky" bottom={0}>
+                    <EditorFooter contents={quillRef.current?.editor?.getContents()} />
+                </GridItem>
+            </Grid>
+            <div ref={toolbarDivRef}>
+                {showInlineToolbar}
+            </div>
+        </>
+    );
 }
+
+function EditorFooter(props: {
+    contents?: DeltaStatic
+}) {
+    const [loading, setLoading] = useBoolean(false);
+
+    return (
+        <Flex bg="white">
+            <Box>
+                <Button isLoading={loading} onClick={() => {
+                    setLoading.on();
+                    const html = new QuillDeltaToHtmlConverter(props.contents?.ops ?? [], {}).convert();
+
+                    getPdfFileFromHtml(html)
+                        .then(blob => {
+                            saveAs(blob, 'pdf-export.pdf')
+                            setLoading.off();
+                        });
+                }}
+                >Export to PDF</Button>
+            </Box>
+        </Flex>
+    );
+}
+

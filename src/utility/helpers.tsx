@@ -1,6 +1,6 @@
 import mammoth from "mammoth";
 
-const resumeFileName = `http://localhost:3000/resume.docx`;
+const resumeFileName = `https://aidox.onrender.com/resume.docx`;
 
 export async function getHtml() {
     const arrBuffer = await fetch(resumeFileName)
@@ -16,4 +16,16 @@ export async function getHtml() {
         .catch((err) => console.log("error", err));
 
     return html;
+}
+
+export async function getPdfFileFromHtml(htmlString: string): Promise<Blob> {
+    const blob = await fetch('https://aidox-pdf.onrender.com/pdf', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/pdf', responseType: 'blob'
+        },
+        body: new URLSearchParams({ html: htmlString }),
+    })
+
+    return await blob.blob()
 }
