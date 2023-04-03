@@ -16,6 +16,7 @@ import {
     Button,
 } from "@chakra-ui/react";
 import { ChatIcon, MinusIcon } from "@chakra-ui/icons";
+import { Range } from "react-quill";
 
 const configuration = new Configuration({
     apiKey: "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",
@@ -28,7 +29,7 @@ const checkIfUpdatedPrompt = (text?: string) => {
         return null;
     }
 
-    const regex = /updated version:(.*)ending\./s;
+    const regex = /^\s*updated\s*version\s*:?\s*(.*?)\s*ending\.?\s*$/i
     const result = text.match(regex);
 
     if (result) {
@@ -39,7 +40,8 @@ const checkIfUpdatedPrompt = (text?: string) => {
 }
 
 export function NewAIConversation(props: {
-    handleUpdatePrompt: (updatedText: string) => void | undefined;
+    handleUpdatePrompt: (updatedText: string, range: Range) => void | undefined;
+    range: Range,
     selectedText: string;
     onRemoveComponent: () => void;
     top: Number | undefined;
@@ -196,7 +198,7 @@ export function NewAIConversation(props: {
                                         position: 'last'
                                     }}>
                                         <Message.CustomContent>
-                                            <Button onClick={e => props.handleUpdatePrompt?.call({}, checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase()) ?? "")}>Add generated prompt to Document</Button>
+                                            <Button onClick={e => props.handleUpdatePrompt?.call({}, checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase()) ?? "", props.range)}>Add generated prompt to Document</Button>
                                         </Message.CustomContent>
                                     </Message>}
                             </MessageList>

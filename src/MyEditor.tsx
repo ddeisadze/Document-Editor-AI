@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { NewAIConversation } from "./NewAIConversation";
-import ReactQuill, { Range, UnprivilegedEditor, Quill } from "react-quill";
-import { Box, Button, Flex, Grid, GridItem, Spacer, Text, useBoolean, useDimensions, useOutsideClick } from "@chakra-ui/react";
+import ReactQuill, { Range } from "react-quill";
+import { Box, Button, Flex, Grid, GridItem, Spacer, Text, useBoolean, useOutsideClick } from "@chakra-ui/react";
 import InlineToolbar from "./inlineToolbar";
 import DocumentTitle from "./LoginTitle";
 import { getHtml, getPdfFileFromHtml } from "./utility/helpers";
 import { saveAs } from 'file-saver';
-import { pdfExporter } from 'quill-to-pdf';
 import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
-import { jsPDF } from "jspdf"
-import html2canvas from "html2canvas"
-import { DeltaStatic } from "quill";
-// import htmlPdf from "html-pdf"
+import Quill, { Delta as DeltaType, DeltaStatic } from 'quill'
+
+const Delta = Quill.import("delta") as typeof DeltaType;
+
 export interface aiConvoComponents {
     componentKey: string;
     component: JSX.Element;
@@ -19,19 +18,13 @@ export interface aiConvoComponents {
 }
 
 export function MyEditor() {
-    const [toolbarStyle, setToolbarStyle] = useState({ display: "none" });
     const [showInlineToolbar, setShowInlineToolbar] =
         useState<JSX.Element | null>(null);
-    const [aiConversationsChildren, setAiConversationsChildren] = useState<
-        aiConvoComponents[]
-    >([]);
+    const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
     const [lastModified, setLastModified] = useState<Date>();
     const [openConvoKey, setOpenConvoKey] = useState<String>();
 
     const quillRef = React.useRef<ReactQuill | null>(null);
-    const gridElementRef = React.useRef<HTMLDivElement>(null);
-
-    const z = useDimensions(gridElementRef, true);
 
     const commentWidth = "300px";
 
@@ -48,8 +41,6 @@ export function MyEditor() {
             handlePasteHTML(html);
         });
 
-        // remove toolbar on any click
-        // document.addEventListener('mousedown', hideToolBar);
     }, []);
 
     const handleChange = (): void => {
@@ -75,13 +66,23 @@ export function MyEditor() {
         });
     };
 
-    const handleOnAiUpdatedPrompt = (editedText: string) => {
-        if (!editedText) {
+    const handleOnAiUpdatedPrompt = (editedText: string, range: Range) => {
+        if (!editedText || !range || !quillRef.current?.editor) {
             return;
         }
 
-        console.log(editedText);
+        const oldContents = quillRef.current.editor.getContents(range.index, range.length)
 
+        const deltaOld = new Delta()
+            .retain(range.index)
+            .delete(range.length)
+            .insert(editedText, {
+                "background": "rgb(124, 114, 227)"
+            });
+
+        // console.log("diff", oldContents.diff(deltaOld))
+
+        quillRef.current.editor.updateContents(deltaOld, "user");
     };
 
     const onLaunchAiClicked = (
@@ -114,6 +115,7 @@ export function MyEditor() {
                     <NewAIConversation
                         componentKey={key}
                         width={commentWidth}
+                        range={range}
                         handleUpdatePrompt={handleOnAiUpdatedPrompt}
                         onRemoveComponent={() => removeAiConvo(key)}
                         selectedText={selectedAttrs.text}
@@ -200,16 +202,6 @@ export function MyEditor() {
                                     right: boundingRect?.right ?? 0,
                                     left: (boundingRect?.left ?? 0) + scrollLeft,
                                 };
-
-                                console.table(selectedAttrs)
-
-                                const format = {
-                                    background: "rgb(124, 114, 227)" // set background color to yellow
-                                };
-
-                                if (range) {
-                                    quillRef?.current?.editor?.formatText(range, format); // apply new background color format
-                                }
 
                                 const toolbarComponenet = <InlineToolbar
                                     top={selectedAttrs.top}
