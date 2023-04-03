@@ -203,15 +203,21 @@ export function MyEditor() {
                                     left: (boundingRect?.left ?? 0) + scrollLeft,
                                 };
 
-                                const toolbarComponenet = <InlineToolbar
-                                    top={selectedAttrs.top}
-                                    bottom={selectedAttrs.bottom}
-                                    left={selectedAttrs.left}
-                                    right={selectedAttrs.right}
-                                    lineHeight={elementLineHeight}
-                                    onClick={() => onLaunchAiClicked(range, selectedAttrs)} />;
+                                const rects = windowRange?.getClientRects();
+                                if (rects && rects.length > 0) {
+                                    const rect = rects[0];
+                                    const x = rect.left + window.pageXOffset;
 
-                                setShowInlineToolbar(toolbarComponenet);
+                                    const toolbarComponenet = <InlineToolbar
+                                        top={selectedAttrs.top}
+                                        bottom={selectedAttrs.bottom}
+                                        left={x}
+                                        right={selectedAttrs.right}
+                                        lineHeight={elementLineHeight}
+                                        onClick={() => onLaunchAiClicked(range, selectedAttrs)} />;
+
+                                    setShowInlineToolbar(toolbarComponenet);
+                                }
                             }
                         }}
                     />
