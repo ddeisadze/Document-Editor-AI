@@ -15,7 +15,7 @@ export async function getHtml() {
         })
         .catch((err) => console.log("error", err));
 
-    return html;
+    return html ?? null;
 }
 
 export async function getPdfFileFromHtml(htmlString: string): Promise<Blob> {
