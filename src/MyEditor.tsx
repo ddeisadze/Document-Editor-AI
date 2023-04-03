@@ -12,20 +12,26 @@ import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
 import { DeltaStatic } from "quill";
 // import htmlPdf from "html-pdf"
-
 export interface aiConvoComponents {
-    key: string,
-    componenet: JSX.Element,
-    range: Range
+    componentKey: string;
+    component: JSX.Element;
+    range: Range;
 }
 
 export function MyEditor() {
-    const [showInlineToolbar, setShowInlineToolbar] = useState<JSX.Element | null>(null);
-    const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
+    const [toolbarStyle, setToolbarStyle] = useState({ display: "none" });
+    const [showInlineToolbar, setShowInlineToolbar] =
+        useState<JSX.Element | null>(null);
+    const [aiConversationsChildren, setAiConversationsChildren] = useState<
+        aiConvoComponents[]
+    >([]);
     const [lastModified, setLastModified] = useState<Date>();
+    const [openConvoKey, setOpenConvoKey] = useState<String>();
 
-    // const gridElementRef = useRef()
     const quillRef = React.useRef<ReactQuill | null>(null);
+    const gridElementRef = React.useRef<HTMLDivElement>(null);
+
+    const z = useDimensions(gridElementRef, true);
 
     const commentWidth = "300px";
 
@@ -58,10 +64,14 @@ export function MyEditor() {
 
     const removeAiConvo = (key: string) => {
         setAiConversationsChildren((prev) => {
-            const componentToRemove = prev.filter(i => i.key == key)[0];
-            quillRef.current?.editor?.removeFormat(componentToRemove.range?.index ?? 0, componentToRemove.range?.length ?? 0);
+            const componentToRemove = prev.filter((i) => i.componentKey == key)[0];
 
-            return prev.filter(i => i.key != key);
+            quillRef.current?.editor?.removeFormat(
+                componentToRemove.range?.index ?? 0,
+                componentToRemove.range?.length ?? 0
+            );
+
+            return prev.filter((i) => i.componentKey != key);
         });
     };
 
@@ -74,16 +84,18 @@ export function MyEditor() {
 
     };
 
-    const onLaunchAiClicked = (range: Range, selectedAttrs: {
-        text: string;
-        top: Number;
-        bottom: Number;
-        left: Number;
-        right: Number;
-
-    }) => {
-
+    const onLaunchAiClicked = (
+        range: Range,
+        selectedAttrs: {
+            text: string;
+            top: Number;
+            bottom: Number;
+            left: Number;
+            right: Number;
+        }
+    ) => {
         const key = new Date().getTime().toString();
+        setOpenConvoKey(key);
 
         const format = {
             background: "rgb(124, 114, 227)" // set background color to yellow
@@ -97,22 +109,41 @@ export function MyEditor() {
             ...aiConversationsChildren,
             {
                 range: range,
-                key: key,
-                componenet: <NewAIConversation
-                    key={key}
-                    width={commentWidth}
-                    handleUpdatePrompt={handleOnAiUpdatedPrompt}
-                    onRemoveComponent={() => removeAiConvo(key)}
-                    selectedText={selectedAttrs.text}
-                    top={selectedAttrs.top}
-                    bottom={selectedAttrs.bottom}
-                    left={selectedAttrs.left}
-                    right={selectedAttrs.right} />
-            }
+                componentKey: key,
+                component: (
+                    <NewAIConversation
+                        componentKey={key}
+                        width={commentWidth}
+                        handleUpdatePrompt={handleOnAiUpdatedPrompt}
+                        onRemoveComponent={() => removeAiConvo(key)}
+                        selectedText={selectedAttrs.text}
+                        top={selectedAttrs.top}
+                        bottom={selectedAttrs.bottom}
+                        left={selectedAttrs.left}
+                        right={selectedAttrs.right}
+                        openConvoKey={openConvoKey}
+                        setOpenConvoKey={setOpenConvoKey}
+                    />
+                ),
+            },
         ]);
 
         setShowInlineToolbar(null);
     };
+
+    useEffect(() => {
+        setAiConversationsChildren((prevChildren) => {
+            return prevChildren.map((child) => {
+                // Update openConvoKey prop
+                return {
+                    ...child,
+                    component: React.cloneElement(child.component, {
+                        openConvoKey: openConvoKey,
+                    }),
+                };
+            });
+        });
+    }, [openConvoKey]);
 
     return (
         <>
@@ -138,7 +169,7 @@ export function MyEditor() {
                         </Text>)}
                 </GridItem>
                 <GridItem pl='2' area={'comments'} maxHeight="100%" overflowY="auto">
-                    {aiConversationsChildren.map(i => i.componenet)}
+                    {aiConversationsChildren.map(i => i.component)}
                 </GridItem>
                 <GridItem pl='2' area={'main'} marginTop="1rem">
                     <ReactQuill ref={quillRef}
@@ -170,23 +201,28 @@ export function MyEditor() {
                                     left: (boundingRect?.left ?? 0) + scrollLeft,
                                 };
 
-                                const rects = windowRange?.getClientRects();
-                                if (rects && rects.length > 0) {
-                                    const rect = rects[0];
-                                    const x = rect.left + window.pageXOffset;
+                                console.table(selectedAttrs)
 
-                                    const toolbarComponenet = <InlineToolbar
-                                        top={selectedAttrs.top}
-                                        bottom={selectedAttrs.bottom}
-                                        left={x}
-                                        right={selectedAttrs.right}
-                                        lineHeight={elementLineHeight}
-                                        onClick={() => onLaunchAiClicked(range, selectedAttrs)} />;
+                                const format = {
+                                    background: "rgb(124, 114, 227)" // set background color to yellow
+                                };
 
-                                    setShowInlineToolbar(toolbarComponenet);
+                                if (range) {
+                                    quillRef?.current?.editor?.formatText(range, format); // apply new background color format
                                 }
+
+                                const toolbarComponenet = <InlineToolbar
+                                    top={selectedAttrs.top}
+                                    bottom={selectedAttrs.bottom}
+                                    left={selectedAttrs.left}
+                                    right={selectedAttrs.right}
+                                    lineHeight={elementLineHeight}
+                                    onClick={() => onLaunchAiClicked(range, selectedAttrs)} />;
+
+                                setShowInlineToolbar(toolbarComponenet);
                             }
-                        }} />
+                        }}
+                    />
                 </GridItem>
                 <GridItem pl="2" area="footer" position="sticky" bottom={0}>
                     <EditorFooter contents={quillRef.current?.editor?.getContents()} />
