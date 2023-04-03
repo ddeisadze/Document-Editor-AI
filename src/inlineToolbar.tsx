@@ -1,6 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandSparkles } from "@fortawesome/free-solid-svg-icons";
+import { FaMagic } from "react-icons/fa";
+import { IconButton } from '@chakra-ui/button';
 
 interface InlineToolbarProps {
   top: number,
@@ -17,18 +18,21 @@ function InlineToolbar(props: InlineToolbarProps) {
     className="wandContainer bubble-float-bottom"
     style={{
       top: props?.top - props?.lineHeight - 15,
-      // bottom: selectedTextState?.bottom,
       left: props?.left,
-      // right: selectedTextState?.right,
       position: "absolute",
       display: (props.isOpen ?? true) ? "block" : "none",
     }}
+
   >
-    <FontAwesomeIcon
+    <IconButton
       id="inlineToolbar" // DO NOT REMOVE, dependency from editor
+      // colorScheme='#10a33f'
+      variant='ghost'
+      aria-label='Call Sage'
+      size={'sm'}
       onClick={props.onClick}
-      icon={faWandSparkles}
-      style={{ color: "#10a33f" }} />
+      icon={<FaMagic id="inlineToolbar" style={{ color: "#10a33f" }} />}
+    />
   </div>;
 }
 

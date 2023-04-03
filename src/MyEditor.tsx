@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { NewAIConversation } from "./NewAIConversation";
-import ReactQuill, { Range } from "react-quill";
-import { Button, Grid, GridItem, Text, useDimensions } from "@chakra-ui/react";
+import ReactQuill, { Range, UnprivilegedEditor, Quill } from "react-quill";
+import { Box, Button, Flex, Grid, GridItem, Spacer, Text, useBoolean, useDimensions, useOutsideClick } from "@chakra-ui/react";
 import InlineToolbar from "./inlineToolbar";
 import DocumentTitle from "./LoginTitle";
 import { getHtml, getPdfFileFromHtml } from "./utility/helpers";
@@ -10,6 +10,7 @@ import { pdfExporter } from 'quill-to-pdf';
 import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
+import { DeltaStatic } from "quill";
 // import htmlPdf from "html-pdf"
 
 export interface aiConvoComponents {
@@ -26,20 +27,15 @@ export function MyEditor() {
     // const gridElementRef = useRef()
     const quillRef = React.useRef<ReactQuill | null>(null);
 
-    console.log(quillRef.current?.editingArea as HTMLElement, "editing area")
     const commentWidth = "300px";
 
-    const hideToolBar = (event: MouseEvent) => {
-        // if(event.button)
-        // setShowInlineToolbar(null);
-        const targetElementId = (event.target as HTMLElement).id;
-
-        if (targetElementId !== "inlineToolbar") {
+    const toolbarDivRef = React.useRef(null)
+    useOutsideClick({
+        ref: toolbarDivRef,
+        handler: () => {
             setShowInlineToolbar(null);
-        } else {
-
         }
-    }
+    })
 
     useEffect(() => {
         getHtml().then((html) => {
@@ -47,7 +43,7 @@ export function MyEditor() {
         });
 
         // remove toolbar on any click
-        document.addEventListener('mousedown', hideToolBar);
+        // document.addEventListener('mousedown', hideToolBar);
     }, []);
 
     const handleChange = (): void => {
@@ -73,6 +69,8 @@ export function MyEditor() {
         if (!editedText) {
             return;
         }
+
+        console.log(editedText);
 
     };
 
@@ -124,7 +122,7 @@ export function MyEditor() {
                 templateAreas={`"header header"
                   "main comments"
                   "footer comments"`}
-                gridTemplateRows={'50px 1fr 30px'}
+                gridTemplateRows={'50px 1fr 40px'}
                 gridTemplateColumns={`1fr ${commentWidth}`}
                 gap='1'
             >
@@ -144,7 +142,6 @@ export function MyEditor() {
                 </GridItem>
                 <GridItem pl='2' area={'main'} marginTop="1rem">
                     <ReactQuill ref={quillRef}
-
                         onChange={handleChange}
                         onChangeSelection={(range) => {
                             if (range?.length ?? 0 > 0) {
@@ -191,59 +188,38 @@ export function MyEditor() {
                             }
                         }} />
                 </GridItem>
-                <GridItem pl="2" area={"footer"}>
-                    <Button onClick={() => {
-                        const delta = quillRef.current?.editor?.getContents(); // gets the Quill delta
-
-                        const quillContent = quillRef.current?.editor?.root.innerHTML;
-
-                        const html = new QuillDeltaToHtmlConverter(delta?.ops ?? [], {
-
-                        }).convert(); // converts to PDF
-
-                        console.log(html)
-
-                        getPdfFileFromHtml(html).then(blob => saveAs(blob, 'pdf-export.pdf'))
-
-                        // htmlPdf.create(html).toBuffer((err: Error, buffer: Buffer) => {
-                        //     const a = new Blob([buffer], { type: "application/pdf" });
-                        //     saveAs(a, 'pdf-export.pdf')
-                        // })
-
-
-                        // const quillContainer = quillRef.current?.editingArea?.editor;
-                        // html2canvas(quillRef.current?.editingArea as HTMLElement).then(canvas => {
-                        //     const imgData = canvas.toDataURL('image/png');
-                        //     const pdf = new jsPDF('p', 'mm', 'a4');
-                        //     pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-                        //     pdf.save('my-document.pdf');
-                        // });
-                    }}
-
-
-                    // const pdf = new jsPDF();
-
-
-                    // console.log(html)
-                    // pdf.setFontSize(12);
-                    // pdf.setPage(20);
-
-                    // pdf.html(html ?? "", {
-                    //     callback: function (doc) {
-                    //         doc.save("output.pdf");
-                    //     },
-                    // });
-                    // pdf.save('my-document.pdf');
-                    // if (delta && delta.ops) {
-                    //     const html = new QuillDeltaToHtmlConverter(delta.ops, {
-
-                    //     }).convert(); // converts to PDF
-                    //     saveAs(pdfAsBlob, 'pdf-export.pdf'); // downloads from the browser
-                    // }
-                    >Export to PDF</Button>
+                <GridItem pl="2" area="footer" position="sticky" bottom={0}>
+                    <EditorFooter contents={quillRef.current?.editor?.getContents()} />
                 </GridItem>
             </Grid>
-            {showInlineToolbar}
+            <div ref={toolbarDivRef}>
+                {showInlineToolbar}
+            </div>
         </>
     );
 }
+
+function EditorFooter(props: {
+    contents?: DeltaStatic
+}) {
+    const [loading, setLoading] = useBoolean(false);
+
+    return (
+        <Flex bg="white">
+            <Box>
+                <Button isLoading={loading} onClick={() => {
+                    setLoading.on();
+                    const html = new QuillDeltaToHtmlConverter(props.contents?.ops ?? [], {}).convert();
+
+                    getPdfFileFromHtml(html)
+                        .then(blob => {
+                            saveAs(blob, 'pdf-export.pdf')
+                            setLoading.off();
+                        });
+                }}
+                >Export to PDF</Button>
+            </Box>
+        </Flex>
+    );
+}
+

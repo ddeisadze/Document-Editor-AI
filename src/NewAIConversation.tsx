@@ -19,6 +19,21 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
+const checkIfUpdatedPrompt = (text?: string) => {
+    if (!text) {
+        return null;
+    }
+
+    const regex = /updated version:(.*)ending\./s;
+    const result = text.match(regex);
+
+    if (result) {
+        return result[1].trim();
+    } else {
+        return null;
+    }
+}
+
 export function NewAIConversation(props: {
     handleUpdatePrompt: (updatedText: string) => void | undefined;
     selectedText: string;
@@ -88,7 +103,7 @@ export function NewAIConversation(props: {
         setOpenAiLoading(true);
         const newAiMessage: ChatCompletionRequestMessage = {
             role: "user",
-            content: `Here is the ask or question from user : ${question} about the provided prompt. Everytime you revise the prompt, please preface with: updated version`
+            content: `Here is the ask or question from user : ${question} about the provided prompt. Everytime you revise the prompt, please preface with: updated version and suffix with :Ending.`
         };
 
         openai.createChatCompletion(
@@ -138,7 +153,8 @@ export function NewAIConversation(props: {
             ? <IconButton position="absolute"
                 float={"left"}
                 top={props.top?.toFixed(0)}
-                size={"sm"} aria-label='Search database' icon={<ChatIcon onClick={setMinimized.toggle} />} />
+                onClick={setMinimized.toggle}
+                size={"sm"} aria-label='Search database' icon={<ChatIcon />} />
             : <Grid
                 templateAreas={`"header"
                   "main"
@@ -154,20 +170,20 @@ export function NewAIConversation(props: {
                 gap='1'
             >
                 <GridItem pl='2' area={'header'}>
-                    <IconButton size={"sm"} float={"right"} margin={"5px"} aria-label='Search database' icon={<MinusIcon onClick={setMinimized.toggle} />} />
+                    <IconButton size={"sm"} float={"right"} onClick={setMinimized.toggle} margin={"5px"} aria-label='Search database' icon={<MinusIcon />} />
                 </GridItem>
                 <GridItem pl='2' area={'main'} maxHeight="500px">
                     <ChatContainer>
                         <MessageList typingIndicator={openAiLoading && <TypingIndicator content="AiDox is typing" />}>
                             {chatState.map((item: any) => <Message model={item} />)}
-                            {chatState[chatState.length - 1].message?.toLowerCase().includes("updated version") &&
+                            {checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase()) &&
                                 <Message model={{
                                     direction: "incoming",
                                     type: "custom",
                                     position: 'last'
                                 }}>
                                     <Message.CustomContent>
-                                        <Button onClick={e => props.handleUpdatePrompt?.call({}, aiAnswer)}>Add generated prompt to Document</Button>
+                                        <Button onClick={e => props.handleUpdatePrompt?.call({}, checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase()) ?? "")}>Add generated prompt to Document</Button>
                                     </Message.CustomContent>
                                 </Message>}
                         </MessageList>
