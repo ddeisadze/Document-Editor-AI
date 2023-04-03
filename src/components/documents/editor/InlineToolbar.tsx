@@ -1,5 +1,3 @@
-import React from 'react'
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FaMagic } from "react-icons/fa";
 import { IconButton } from '@chakra-ui/button';
 
