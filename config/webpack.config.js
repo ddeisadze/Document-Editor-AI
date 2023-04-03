@@ -503,7 +503,7 @@ module.exports = function (webpackEnv) {
                 modules: {
                   mode: 'icss',
                 },
-              })
+              }),
             },
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css

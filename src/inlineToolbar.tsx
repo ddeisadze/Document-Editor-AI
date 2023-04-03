@@ -25,6 +25,7 @@ function InlineToolbar(props: InlineToolbarProps) {
     }}
   >
     <FontAwesomeIcon
+      id="inlineToolbar" // DO NOT REMOVE, dependency from editor
       onClick={props.onClick}
       icon={faWandSparkles}
       style={{ color: "#10a33f" }} />

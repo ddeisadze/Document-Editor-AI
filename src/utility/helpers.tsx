@@ -17,3 +17,15 @@ export async function getHtml() {
 
     return html;
 }
+
+export async function getPdfFileFromHtml(htmlString: string): Promise<Blob> {
+    const blob = await fetch('https://aidox-pdf.onrender.com/pdf', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/pdf', responseType: 'blob'
+        },
+        body: new URLSearchParams({ html: htmlString }),
+    })
+
+    return await blob.blob()
+}
