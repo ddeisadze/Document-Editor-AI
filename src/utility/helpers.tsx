@@ -1,6 +1,6 @@
 import mammoth from "mammoth";
 
-const resumeFileName = `https://aidox.onrender.com/resume.docx`;
+const resumeFileName = `http://localhost:3000/resume.docx`;
 
 export async function getHtml() {
     const arrBuffer = await fetch(resumeFileName)
