@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AIComment } from "./AIComment";
+import { AIComment } from "../aicomment/AIComment";
 import { Range } from "react-quill";
 import { Grid, GridItem, Spacer, Text } from "@chakra-ui/react";
 import DocumentTitle from "./DocumentTitle";
@@ -35,11 +35,8 @@ export function DocumentEditor() {
     }, []);
 
     useEffect(() => {
-
-
         setAiConversationsChildren((prevChildren) => {
             return prevChildren.map((child) => {
-                // Update openConvoKey prop
                 return {
                     ...child,
                     component: React.cloneElement(child.component, {
@@ -79,7 +76,6 @@ export function DocumentEditor() {
         }
 
         //#todo: we need to update range here also when there are changes made to range from editor
-
         const updateDelta = content.compose(
             new Delta()
                 .retain(range.index)
@@ -160,7 +156,10 @@ export function DocumentEditor() {
             </Grid>
         </>
     );
+
+
 }
+
 
 
 export interface SelectedText {
@@ -170,5 +169,3 @@ export interface SelectedText {
     left: Number;
     right: Number;
 }
-
-
