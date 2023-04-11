@@ -1,22 +1,40 @@
 import React, { useState, useEffect } from "react";
-import ReactQuill, { Range } from "react-quill";
+import ReactQuill, { Range, Quill } from "react-quill";
 import { useOutsideClick } from "@chakra-ui/react";
 import { DeltaStatic, Sources } from 'quill';
 import { SelectedText } from "./DocumentEditor";
-import InlineToolbar from "./InlineToolbar";
+import InlineToolbar from "./toolbar/InlineToolbar";
 import html2canvas from 'html2canvas';
-
+import "./QuillEditor.css"
 
 interface quillEditorProps {
-    onContentChange: (value: DeltaStatic) => void,
-    onAddComment: (range: Range, selectedAttrs: SelectedText) => void
-    initialHtmlData: string | null,
+    onContentChange?: (value: DeltaStatic) => void,
+    onAddComment?: (range: Range, selectedAttrs: SelectedText) => void
+    initialHtmlData?: string | null,
     content?: DeltaStatic,
 }
+const modules = {
+    toolbar: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ 'align': [] }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['link']
+    ]
+};
+
+const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'background',
+    'align',
+    'list', 'bullet',
+    'link', 'image', 'video'
+];
 
 export function QuillEditor(props: quillEditorProps) {
     const [showInlineToolbar, setShowInlineToolbar] = useState<JSX.Element | null>(null);
-    const quillRef = React.useRef<ReactQuill | null>(null);
+    const quillRef = React.useRef<ReactQuill>(null);
 
     const toolbarDivRef = React.useRef(null);
 
@@ -28,7 +46,7 @@ export function QuillEditor(props: quillEditorProps) {
     });
 
     const handleChange = (value: string, delta: DeltaStatic, source: Sources): void => {
-        if (quillRef.current?.editor) {
+        if (quillRef.current?.editor && props.onContentChange) {
             props.onContentChange(quillRef.current.editor.getContents());
         }
     };
@@ -42,10 +60,21 @@ export function QuillEditor(props: quillEditorProps) {
             quillRef?.current?.editor?.formatText(range, format); // apply new background color format
         }
 
-        props.onAddComment(range, selectedAttrs);
+        props?.onAddComment?.call({}, range, selectedAttrs);
 
         setShowInlineToolbar(null);
     };
+    // console.log(Quill.imports);
+    // const allowClassNames = Quill.import('attributors/class/attributor');
+    // allowClassNames.whitelist = ['center'];
+    // Quill.register(allowClassNames, true);
+
+    const Parchment = Quill.import('parchment');
+    const PrefixClass = new Parchment.Attributor.Class('prefix', 'prefix', {
+        scope: Parchment.Scope.INLINE,
+        whitelist: ['align-center', 'another-class']
+    });
+    Quill.register(PrefixClass, true);
 
     useEffect(() => {
         if (quillRef.current) {
@@ -63,10 +92,13 @@ export function QuillEditor(props: quillEditorProps) {
 
     return <>
         <ReactQuill
+            className="container"
             ref={quillRef}
             value={props.content ?? props.initialHtmlData ?? ""}
             onChange={handleChange}
-            onChangeSelection={(range) => {
+            modules={modules}
+            formats={formats}
+            onChangeSelection={(range: Range) => {
                 if (range?.length ?? 0 > 0) {
                     var text = quillRef.current?.editor?.getText(range?.index, range?.length);
                     const bounds = quillRef.current?.editor?.getBounds(range?.index ?? 0);
