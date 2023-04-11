@@ -7,6 +7,7 @@ import Quill, { Delta as DeltaType, DeltaStatic } from 'quill'
 import { QuillEditor } from "./QuillEditor";
 import { DocumentFooter } from "./DocumentFooter";
 import { getHtml } from "../../../utility/helpers";
+import { log } from "console";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -68,6 +69,7 @@ export function DocumentEditor() {
     };
 
     const handleContentChange = (value: DeltaStatic) => {
+        console.log(value, "value");
         setContent(value);
 
         setLastModified(new Date());

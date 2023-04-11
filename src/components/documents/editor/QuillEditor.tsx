@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactQuill, { Range } from "react-quill";
 import { useOutsideClick } from "@chakra-ui/react";
 import { DeltaStatic, Sources } from 'quill';
 import { SelectedText } from "./DocumentEditor";
 import InlineToolbar from "./InlineToolbar";
+import html2canvas from 'html2canvas';
+
 
 interface quillEditorProps {
     onContentChange: (value: DeltaStatic) => void,
@@ -44,6 +46,20 @@ export function QuillEditor(props: quillEditorProps) {
 
         setShowInlineToolbar(null);
     };
+
+    useEffect(() => {
+        if (quillRef.current) {
+          const editorNode = quillRef.current.getEditor().root;
+          const width = editorNode.clientWidth;
+        const height = editorNode.clientHeight / 2;
+        html2canvas(editorNode, { width, height }).then(canvas => {
+            const dataUrl = canvas.toDataURL();
+            localStorage.setItem('thumbnail', dataUrl);
+            console.log(dataUrl);
+            
+          });
+        }
+      }, [props.content]);
 
     return <>
         <ReactQuill
