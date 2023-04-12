@@ -40,3 +40,15 @@ body {
 .center {
     text-align: center;
 }
+
+/* comment-link {
+    border-bottom: solid 3px;
+} */
+
+comment-link:hover {
+    background-color: #fdcccc;
+    /* opacity: 0.1; */
+    cursor: pointer;
+    display: inline;
+    position: relative;
+}

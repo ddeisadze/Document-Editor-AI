@@ -1,36 +1,30 @@
 import React, { useReducer, useState, useEffect } from "react";
-import {
-    ChatContainer,
-    MessageList,
-    Message,
-    MessageInput,
-    MessageModel,
-    TypingIndicator,
-} from "@chatscope/chat-ui-kit-react";
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { ChatCompletionRequestMessage } from "openai";
 import {
     Grid,
     GridItem,
     IconButton,
     Button,
 } from "@chakra-ui/react";
-import { ChatIcon, MinusIcon } from "@chakra-ui/icons";
+import { ChatIcon } from "@chakra-ui/icons";
 import { Range } from "react-quill";
 import CommentDialog from "./CommentDialog";
+import openai from "../../../utility/openai";
 
-const configuration = new Configuration({
-    apiKey: "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",
-});
-
-const openai = new OpenAIApi(configuration);
+interface MessageModel {
+    message: string,
+    sentTime: string,
+    sender: string,
+    direction: string,
+    position: string,
+}
 
 const checkIfUpdatedPrompt = (text?: string) => {
     if (!text) {
         return null;
     }
 
-    const regex = /^\s*updated\s*(?<type>version|prompt)\s*:?\s*(?<text>.*?)\s*ending\.?\s*$/im;
+    const regex = /Generated\s+answer:\s+(?<text>.+)/i
     const result = text.match(regex);
 
     if (result && result.groups) {
@@ -43,7 +37,7 @@ const checkIfUpdatedPrompt = (text?: string) => {
 }
 
 export function AIComment(props: {
-    handleUpdatePrompt: (updatedText: string, range: Range) => void | undefined;
+    handleUpdatePrompt?: (updatedText: string, range: Range) => void | undefined;
     range: Range,
     selectedText: string;
     onRemoveComponent: () => void;
@@ -59,12 +53,18 @@ export function AIComment(props: {
     const openAiDefaultValue: ChatCompletionRequestMessage[] = [
         {
             role: "system",
-            content: `You are a resume writing assistant. I will pass you a prompt and a question or ask from an user. It is your job to help answer and fulfill the ask. Everytime you revise the prompt, please preface with: updated version`,
-        },
-        {
-            role: "system",
-            content: `Here is the prompt: ${props.selectedText}`,
-        },
+            content: `You are a resume writing assistant. 
+            I will pass you a text and multiple requests from the user on the text.
+            It is your job to answer and fulfill the request. 
+
+            Desired format:
+            Generated answer: <your_answer_to_request>
+
+            Text: """
+            ${props.selectedText}
+            """
+            `,
+        }
     ];
 
     const [chatState, ChatDispatch] = useReducer(
@@ -130,13 +130,16 @@ export function AIComment(props: {
         setOpenAiLoading(true);
         const newAiMessage: ChatCompletionRequestMessage = {
             role: "user",
-            content: `Here is the ask or question from user : ${question} about the provided prompt. Everytime you revise the prompt, please preface with: updated version and suffix with :Ending.`
+            content: `Answer the request from the user below about the original text.
+
+            Request: """
+            ${question}"""`
         };
 
         openai
             .createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [...openAiState, newAiMessage],
+                messages: [...openAiState, newAiMessage]
             })
             .then((r: any) => {
                 const answer = r.data.choices[0]
