@@ -66,6 +66,10 @@ const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: P
 
     return (
         <Grid
+            style={{
+                zIndex: 10000
+            }}
+            backgroundColor='white'
             borderWidth="1px"
             borderRadius="md"
             minHeight="300px"

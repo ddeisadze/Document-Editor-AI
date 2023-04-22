@@ -9,7 +9,6 @@ import openai from "../../../utility/openai";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
-
 function getRandomHighlightColor() {
     const highlightColors = [
         '#ffff00', // Yellow
@@ -118,8 +117,6 @@ const formats = [
     'commentLink'
 ];
 
-
-
 // const retrieveEditsForBulletPoints: (currentContent: DeltaStatic) => {}  = (currentContent: DeltaStatic) => {
 //     if (!currentContent){
 //         return [];
@@ -146,7 +143,6 @@ export function QuillEditor(props: quillEditorProps) {
     console.log(props.content)
 
     useEffect(() => {
-
 
     }, [])
 
@@ -201,6 +197,8 @@ export function QuillEditor(props: quillEditorProps) {
 
         const text = quillRef.current?.editor?.getText();
 
+        console.log("text", text)
+
         const editOpenAiPrompt = `
         You are a resume writing assistant. 
         I will pass you text and it is your job to suggest all spelling mistakes.
@@ -230,6 +228,7 @@ export function QuillEditor(props: quillEditorProps) {
 
     return <>
         <ReactQuill
+            placeholder="Copy paste resume from Google Drive or any file here...."
             className="container"
             ref={quillRef}
             value={props.content ?? props.initialHtmlData ?? ""}

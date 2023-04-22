@@ -49,32 +49,3 @@
   display: block;
 
 }
-
-.ql-editor span[style*="background-color"]:hover {
-  /* cursor: pointer; */
-  animation: glowing 2s ease-in-out;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.2), 0 0 50px rgba(255, 255, 255, 0.1);
-}
-
-.ql-editor span[style*="background-color"] {
-  background-color: #fffd87;
-  box-shadow: 2px 2px 2px 2px rgba(124, 114, 227, 0.7);
-  margin: 2px;
-  color: #fff;
-  padding: 1px;
-  border-radius: 8px;
-}
-
-@keyframes glowing {
-  0% {
-    box-shadow: 0 0 0 0 rgba(124, 114, 227, 0.7);
-  }
-
-  50% {
-    box-shadow: 0 0 20px 0 rgba(124, 114, 227, 0.7);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(124, 114, 227, 0.7);
-  }
-}
