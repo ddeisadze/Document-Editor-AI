@@ -6,31 +6,45 @@ import DocumentTitle from "./DocumentTitle";
 import Quill, { Delta as DeltaType, DeltaStatic } from 'quill'
 import { QuillEditor } from "./QuillEditor";
 import { DocumentFooter } from "./DocumentFooter";
-import { getHtml } from "../../../utility/helpers";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
 export interface aiConvoComponents {
-    componentKey: string;
+    id: string;
     component: JSX.Element;
-    range: Range;
+    range: Range
 }
 
-export function DocumentEditor() {
+export interface DocumentEditorProps {
+    documentHtml: string,
+    documentName: string | undefined,
+    isDemoView?: boolean
+}
+
+export function DocumentEditor(props: DocumentEditorProps) {
     const commentWidth = "300px";
 
-    const [documentName, setDocumentName] = useState<string>();
+    const [documentName, setDocumentName] = useState<string | undefined>(props.documentName);
     const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
     const [lastModified, setLastModified] = useState<Date>();
     const [openConvoKey, setOpenConvoKey] = useState<string>();
     const [content, setContent] = useState<DeltaStatic>();
-    const [loadedDocumentHtml, setLoadedDocumentHtml] = useState<string | null>(null)
+    const [loadedDocumentHtml, setLoadedDocumentHtml] = useState<string | undefined>(props.documentHtml)
 
     useEffect(() => {
 
-        getHtml().then((html) => {
-            setLoadedDocumentHtml(html);
+        window.addEventListener("click", (e) => {
+            const target = e.target as HTMLElement;
+            const commentId = target.getAttribute("commentId");
+
+            if (target.tagName.toLowerCase() === "comment-link" && commentId) {
+                setOpenConvoKey(commentId)
+            }
         });
+
+        if (props.isDemoView) {
+
+        }
 
     }, []);
 
@@ -49,7 +63,7 @@ export function DocumentEditor() {
 
     const removeAiConvo = (key: string, range: Range) => {
         setAiConversationsChildren((prev) => {
-            return prev.filter((i) => i.componentKey != key);
+            return prev.filter((i) => i.id != key);
         });
 
         if (!range) {
@@ -80,29 +94,26 @@ export function DocumentEditor() {
             new Delta()
                 .retain(range.index)
                 .delete(range.length)
-                .insert(editedText, {
-                    "background": "rgb(124, 114, 227)"
-                }));
+                .insert(editedText));
 
         setContent(updateDelta);
     };
 
-    const addAiConvo = (range: Range, selectedAttrs: SelectedText) => {
-        const key = new Date().getTime().toString();
-        setOpenConvoKey(key);
+    const addAiConvo = (commentId: string, range: Range, selectedAttrs: SelectedText) => {
+        setOpenConvoKey(commentId);
 
         setAiConversationsChildren([
             ...aiConversationsChildren,
             {
+                id: commentId,
                 range: range,
-                componentKey: key,
                 component: (
                     <AIComment
-                        componentKey={key}
+                        componentKey={commentId}
                         width={commentWidth}
                         range={range}
                         handleUpdatePrompt={handleOnAiUpdatedPrompt}
-                        onRemoveComponent={() => removeAiConvo(key, range)}
+                        onRemoveComponent={() => removeAiConvo(commentId, range)}
                         selectedText={selectedAttrs.text}
                         top={selectedAttrs.top}
                         bottom={selectedAttrs.bottom}
@@ -156,11 +167,7 @@ export function DocumentEditor() {
             </Grid>
         </>
     );
-
-
 }
-
-
 
 export interface SelectedText {
     text: string;
