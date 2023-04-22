@@ -12,6 +12,7 @@ interface quillEditorProps {
     onAddComment?: (range: Range, selectedAttrs: SelectedText) => void
     initialHtmlData?: string | null,
     content?: DeltaStatic,
+    documentName?: string
 }
 const modules = {
     toolbar: [
@@ -89,6 +90,35 @@ export function QuillEditor(props: quillEditorProps) {
           });
         }
       }, [props.content]);
+    
+      useEffect(() => {
+        if (quillRef.current) {
+          const editorNode = quillRef.current.getEditor().root;
+          const width = editorNode.clientWidth;
+          const height = editorNode.clientHeight / 2;
+          html2canvas(editorNode, { width, height }).then(canvas => {
+            const dataUrl = canvas.toDataURL();
+            const documentName = props.documentName; // replace with your own logic to get the document name
+            
+            let existingDocuments = [];
+            const documentsFromLocalStorage = localStorage.getItem('documents');
+            if (documentsFromLocalStorage && typeof documentsFromLocalStorage === 'string') {
+              existingDocuments = JSON.parse(documentsFromLocalStorage);
+            }
+            
+            const existingDocument = existingDocuments.find((document: any) => document.documentName === documentName);
+            if (existingDocument) {
+              existingDocument.thumbnail = dataUrl;
+              existingDocument.documentName = documentName;
+              existingDocument.content = props.content;
+            } else {
+              existingDocuments.push({ content: props.content, documentName: documentName, thumbnail: dataUrl });
+            }
+            
+            localStorage.setItem('documents', JSON.stringify(existingDocuments));
+          });
+        }
+      }, [props.content, props.documentName]);
 
     return <>
         <ReactQuill

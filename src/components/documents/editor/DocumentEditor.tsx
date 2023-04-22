@@ -17,14 +17,19 @@ export interface aiConvoComponents {
     range: Range;
 }
 
-export function DocumentEditor() {
+export interface DocumentEditor {
+    documentName: string;
+    content: DeltaStatic;
+}
+
+export function DocumentEditor(props : DocumentEditor) {
     const commentWidth = "300px";
 
-    const [documentName, setDocumentName] = useState<string>();
+    const [documentName, setDocumentName] = useState<string>(props.documentName);
     const [aiConversationsChildren, setAiConversationsChildren] = useState<aiConvoComponents[]>([]);
     const [lastModified, setLastModified] = useState<Date>();
     const [openConvoKey, setOpenConvoKey] = useState<string>();
-    const [content, setContent] = useState<DeltaStatic>();
+    const [content, setContent] = useState<DeltaStatic>(props.content);
     const [loadedDocumentHtml, setLoadedDocumentHtml] = useState<string | null>(null)
 
     useEffect(() => {
@@ -150,6 +155,7 @@ export function DocumentEditor() {
                         onContentChange={handleContentChange}
                         onAddComment={addAiConvo}
                         content={content}
+                        documentName={documentName}
                     />
                 </GridItem>
                 <GridItem pl="2" area="footer" position="sticky" bottom={0}>

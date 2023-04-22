@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Box,
   Button,
-  Center,
   Heading,
   SimpleGrid,
-  Stack,
-  Flex,
-  Grid
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  ButtonGroup,
+  VStack,
+  PopoverArrow,
+  PopoverCloseButton,
+  Grid,
 } from "@chakra-ui/react";
 import GalleryNavbar from "./GalleryNavbar";
 import ThumbnailPreview from "./editor/ThumbnailPreview";
@@ -66,26 +70,21 @@ function DocumentGallery({ documents }: DocumentGalleryProps) {
     </SimpleGrid>
   );
 }
-const ThumbnailPreviewRow = () => {
-    const thumbnails = [
-      localStorage.getItem("thumbnail") as string | undefined,
-      localStorage.getItem("thumbnail") as string | undefined,
-      localStorage.getItem("thumbnail") as string | undefined,
-      localStorage.getItem("thumbnail") as string | undefined,
-      localStorage.getItem("thumbnail") as string | undefined,
-      localStorage.getItem("thumbnail") as string | undefined,
-  
-      localStorage.getItem("thumbnail") as string | undefined,
-    ];
-  
-    return (
-      <Grid templateColumns='repeat(4, 1fr)' gap={4} mt={8} mr={60} ml={60}>
-        {thumbnails.map((thumbnail, index) => (
-            <ThumbnailPreview thumbnail={thumbnail} />
-        ))}
-      </Grid>
-    );
-  };
+const ThumbnailPreviewRow = ({
+  documents,
+}: {
+  documents: Array<any> | null;
+}) => {
+  console.log("yooo", Array.isArray(documents), typeof documents);
+
+  return documents && Array.isArray(documents) ? (
+    <Grid templateColumns="repeat(4, 1fr)" gap={4} mt={8} mr={60} ml={60}>
+      {documents.map((document: any) => (
+        <ThumbnailPreview thumbnail={document.thumbnail} />
+      ))}
+    </Grid>
+  ) : null;
+};
 
 const AddButton = ({ onClick }: { onClick: () => void }) => {
   return (
@@ -100,12 +99,57 @@ const AddButton = ({ onClick }: { onClick: () => void }) => {
       right="15"
       borderRadius="full"
       onClick={onClick}
+    />
+  );
+};
+
+const FileExplorer = ({ handleSelect }: any) => {
+  const inputRef: any = useRef();
+
+  const handleButtonClick = () => {
+    inputRef.current.click();
+  };
+
+  const handleSelectFile = (event: any) => {
+    const file = event.target.files[0];
+    handleSelect(file);
+  };
+
+  return (
+    <div>
+      <button onClick={handleButtonClick}>Select a file</button>
+      <input
+        type="file"
+        ref={inputRef}
+        style={{ display: "none" }}
+        onChange={handleSelectFile}
       />
+    </div>
+  );
+};
+const MyUploader = () => {
+  console.log("uploader");
+
+  const handleSelect = (file: any) => {
+    // handle the selected file here
+    console.log(file);
+  };
+
+  return (
+    <div>
+      <h2>Upload a file</h2>
+      <FileExplorer handleSelect={handleSelect} />
+    </div>
   );
 };
 
 export function DocumentManager() {
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const documentsString = localStorage.getItem("documents");
+  const documents = documentsString
+    ? JSON.parse(documentsString)
+    : (null as Array<any> | null);
+  const [isCreatingNew, setIsCreatingNew] = useState(documents === null);
+  console.log(isCreatingNew, documents ? documents[0].documentName : null);
 
   function handleNewDocumentClick() {
     setIsCreatingNew(true);
@@ -114,27 +158,42 @@ export function DocumentManager() {
   return (
     <div className="">
       <GalleryNavbar />
-      {/* <Grid
-      minHeight="100vh"
-      templateRows="auto 1fr auto"
-      templateColumns='repeat(4, 1fr)'
-      gap={4}
-      padding={4}
-    > */}
-      {/* <Center> */}
-        {/* <Stack spacing={4} alignItems="center"> */}
-        {isCreatingNew ? (
-            <Box borderWidth="1px" borderRadius="md" padding={4}>
-              {/* Here you can add the form to create a new document */}
-            </Box>
-          ) : (
-            <ThumbnailPreviewRow />
-          )}        
-          {/* </Stack> */}
-      {/* </Center> */}
-    {/* </Grid> */}
-      
-    <AddButton onClick={handleNewDocumentClick} />
+      {isCreatingNew ? (
+        <MyUploader />
+      ) : (
+        <ThumbnailPreviewRow documents={documents} />
+      )}
+      <AddButton onClick={() => null} />
+
+      <Popover placement="top" offset={[0, 20]}>
+        <PopoverTrigger>
+          <IconButton
+            aria-label="Add Document"
+            icon={<FaPlus size={30} />}
+            sx={{ width: "100px", height: "100px" }}
+            variant="solid"
+            colorScheme="teal"
+            position="fixed"
+            bottom="15"
+            right="15"
+            borderRadius="full"
+          />
+        </PopoverTrigger>
+        <PopoverContent height={"150px"} width={"100px"} border={"none"}  boxShadow={'none'}>
+          {/* <PopoverArrow /> */}
+
+          {/* <PopoverBody> */}
+            <ButtonGroup variant="outline" spacing="6" >
+            <VStack>
+
+              <Button colorScheme="#10a33f">New Blank</Button>
+              <Button colorScheme="#10a33f">Upload</Button>
+              </VStack>
+            </ButtonGroup>
+            
+          {/* </PopoverBody> */}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
