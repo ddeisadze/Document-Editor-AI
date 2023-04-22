@@ -1,56 +1,57 @@
 import mammoth from "mammoth";
 
-const resumeFileName = `http://localhost:3000/resume.docx`;
+export async function getHtmlFromDocxUrlApi(fileUrl: string): Promise<string> {
+	const resumeBlob = await fetch(fileUrl)
+		.then((res) => res.blob())
 
-export async function getHtml() {
-    const arrBuffer = await fetch(resumeFileName)
-        .then((res) => res.blob())
-        .then((blob) => blob.arrayBuffer());
+	return getHtmlFromFileApi(resumeBlob);
+}
 
-    function transformElement(element: any) {
+export async function getHtmlFromFileLegacy(buffer: ArrayBuffer) {
+	const html = await mammoth
+		.convertToHtml({ arrayBuffer: buffer })
+		.then(function (result) {
+			var html = result.value;
+			return html;
+		})
+		.catch((err) => console.log("error", err));
 
-        if (element.children) {
-            element.children.forEach(transformElement);
-        }
+	return html ?? null;
+}
 
-        if (element.alignment === "center" && !element.styleId) {
-            console.log("testse", element)
-            element.styleName = "center";
-            element.styleId = "Heading2";
-        }
+function getHtmlFromFileApi(fileBlob: Blob) {
+	const form = new FormData();
+	form.append("file", fileBlob);
 
-        return element;
-    }
+	const options: RequestInit = {
+		method: 'POST',
+		headers: { 'Content-Type': 'multipart/form-data' },
+		body: form,
+	};
 
-    var options = {
-        styleMap: [
-            "p[style-name='Title'] => h1:fresh",
-            // "p[style-name='center'] => p.align-center",
-            // "p[style-name='Center'] => p.center",
-        ],
-        transformDocument: transformElement
-    };
+	return fetch('https://office-converter.onrender.com/conversion?format=html', options)
+		.then(response => {
+			console.log(response);
 
-    const html = await mammoth
-        .convertToHtml({ arrayBuffer: arrBuffer }, options)
-        .then(function (result) {
-            console.log(result)
-            var html = result.value;
-            return html;
-        })
-        .catch((err) => console.log("error", err));
-
-    return html ?? null;
+			return response.json();
+		})
+		.then(response => {
+			console.log(response);
+			return response;
+		})
+		.catch(err => console.error(err));
 }
 
 export async function getPdfFileFromHtml(htmlString: string): Promise<Blob> {
-    const blob = await fetch('https://aidox-pdf.onrender.com/pdf', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/pdf', responseType: 'blob'
-        },
-        body: new URLSearchParams({ html: htmlString }),
-    })
+	const blob = await fetch('https://aidox-pdf.onrender.com/pdf', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Accept': 'application/pdf',
+			responseType: 'blob'
+		},
+		body: new URLSearchParams({ html: htmlString }),
+	})
 
-    return await blob.blob()
+	return await blob.blob()
 }
