@@ -68,7 +68,6 @@ class CommentLinkBlot extends Quill.import('blots/inline') {
         id: string,
         color: string
     }) {
-        console.log("comment link", value)
         let node: HTMLElement = super.create();
 
         if (!value) {
@@ -77,6 +76,8 @@ class CommentLinkBlot extends Quill.import('blots/inline') {
 
         // Sanitize url value if desired
         node.setAttribute('commentId', value.id);
+        node.setAttribute('color', value.color);
+
         // @ts-ignore
         node.style = `border-bottom: ${value.color} solid 4px`
         // Okay to set other non-format related attributes
@@ -85,7 +86,10 @@ class CommentLinkBlot extends Quill.import('blots/inline') {
     }
 
     static formats(node: any) {
-        return node.getAttribute('commentId');
+        return {
+            commendId: node.getAttribute('commentId'),
+            color: node.getAttribute('color')
+        }
     }
 }
 
@@ -156,7 +160,6 @@ export function QuillEditor(props: quillEditorProps) {
 
     const handleChange = (): void => {
         if (quillRef.current?.editor && props.onContentChange) {
-            console.log("change")
             props.onContentChange(quillRef.current.editor.getContents());
         }
     };
@@ -174,7 +177,11 @@ export function QuillEditor(props: quillEditorProps) {
 
             // console.log("test1122", quillRef?.current?.editor?.formatText(range, { commentLink: { id: "commentId" } }));
 
-            quillRef?.current?.editor?.updateContents(ops);
+            console.log("launch ops", ops)
+            const newDelta = quillRef?.current?.editor?.updateContents(ops);
+            console.log("launch ops nd", newDelta)
+
+
 
             // if (updateDelta) {
             //     quillRef?.current?.editor?.setContents(updateDelta);

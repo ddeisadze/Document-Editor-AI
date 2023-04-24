@@ -7,7 +7,7 @@ export async function getHtmlFromDocxUrlApi(fileUrl: string): Promise<string> {
 	return getHtmlFromFileApi(resumeBlob);
 }
 
-export async function getHtmlFromFileLegacy(buffer: ArrayBuffer) {
+export async function getHtmlFromDocFileLegacy(buffer: ArrayBuffer) {
 	const html = await mammoth
 		.convertToHtml({ arrayBuffer: buffer })
 		.then(function (result) {

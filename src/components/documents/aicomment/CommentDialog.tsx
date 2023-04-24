@@ -1,21 +1,24 @@
 import { ReactElement, useEffect, useRef, useState } from 'react';
-import { Box, FormControl, FormLabel, Textarea, Button, Text, Spinner, Grid, GridItem, IconButton, ButtonGroup, Input } from '@chakra-ui/react';
+import { Box, FormControl, FormLabel, Textarea, Button, Text, Spinner, Grid, GridItem, IconButton, ButtonGroup, Input, InputGroup, InputRightElement } from '@chakra-ui/react';
 import "./CommentDialog.css";
 import { MinusIcon } from '@chakra-ui/icons';
+import { FaRegPaperPlane, FaWindowMaximize, FaWindowMinimize } from 'react-icons/fa';
 
 interface Props {
-    onSubmit: (comment: string) => void;
-    onMinimize: () => void;
-    onResolve: () => void;
+    onMessageSend: (comment: string) => void;
     width: string,
+    height?: string,
     typingIndicator: boolean;
     messages?: Message[];
     top?: number | string;
 
-    updateTextButton: "" | ReactElement | null
+    footerComponent?: ReactElement
+    headerComponent?: ReactElement
+
+    messageReactionButtons: (ReactElement | null | "")[]
 }
 
-interface Message {
+export interface Message {
     text: string;
     isUser: boolean;
     time: Date;
@@ -37,7 +40,7 @@ const WaveSpinner: React.FC<WaveSpinnerProps> = ({ color, size }) => {
     );
 };
 
-const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: Props) => {
+const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = [], ...props }: Props) => {
     const [comment, setComment] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -67,13 +70,13 @@ const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: P
     return (
         <Grid
             style={{
-                zIndex: 10000
+                zIndex: 200
             }}
             backgroundColor='white'
             borderWidth="1px"
             borderRadius="md"
             minHeight="300px"
-            maxHeight="300px"
+            maxHeight={props.height ?? "300px"}
             maxWidth={props.width}
             top={props.top}
             templateAreas={`"header"
@@ -84,7 +87,7 @@ const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: P
             position="relative" >
 
             <GridItem pl='2' area={'header'} >
-                <IconButton onClick={props.onMinimize} size={"sm"} float={"right"} aria-label='Search database' icon={<MinusIcon />} />
+                {props.headerComponent}
             </GridItem>
             <GridItem pl='2' area={'main'} width="100%">
                 {messages.length > 0 && (
@@ -124,10 +127,12 @@ const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: P
 
                             </Box>
                         ))}
-                        {props.updateTextButton &&
-                            <Box maxWidth={props.width}>
-                                {props.updateTextButton}
-                            </Box>}
+
+                        {props.messageReactionButtons &&
+                            <ButtonGroup size={"sm"} isAttached variant='outline'>
+                                {props.messageReactionButtons}
+                            </ButtonGroup>}
+
                         {typingIndicator && (
                             <Box paddingBottom={0} marginLeft={"0.3em"} display="flex" alignItems="center">
                                 <WaveSpinner />
@@ -140,15 +145,23 @@ const CommentDialog = ({ onSubmit, typingIndicator, messages = [], ...props }: P
             </GridItem>
 
             <GridItem p={2} pl='2' area={'footer'} alignItems="center" justifyContent='center' alignSelf="center">
-                <Input fontSize={"sm"} value={comment} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask our AI to edit, generate new content" />
-                <ButtonGroup mt="1em" variant='outline'>
-                    <Button
-                        variant={'solid'} colorScheme="blue" onClick={() => handleSubmit()}>
-                        Comment
-                    </Button>
-                    <Button colorScheme='orange' onClick={props.onResolve}>Resolve</Button>
-                </ButtonGroup>
-
+                <InputGroup>
+                    <Input
+                        fontSize={"sm"}
+                        value={comment}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask our AI..."
+                    />
+                    <InputRightElement children={<IconButton
+                        size='sm'
+                        aria-label='Send message'
+                        color={"blue.300"}
+                        icon={<FaRegPaperPlane id="inlineToolbar" />}
+                        variant={'outline'} colorScheme="blue" onClick={() => handleSubmit()}>
+                    </IconButton>} />
+                </InputGroup>
+                {props.footerComponent}
             </GridItem>
         </Grid >
     );

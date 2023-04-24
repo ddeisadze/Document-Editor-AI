@@ -5,7 +5,7 @@ import { ChakraProvider, extendTheme, useTheme } from "@chakra-ui/react"
 import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
 import ResumeModal from "./ImportResumeDialog";
 import { LinkedInCallback } from 'react-linkedin-login-oauth2';
-import { getHtmlFromFileLegacy } from "../utility/helpers";
+import { getHtmlFromDocFileLegacy } from "../utility/helpers";
 import { useState } from "react";
 import { test_resume_html } from "../utility/sampleData";
 
@@ -33,13 +33,18 @@ export default function DocumentEditorPage() {
   });
 
   const onFileUpload = async (file: File) => {
+    const fileType = file?.type;
 
-    // convert to html use legacy until api is fixed
-    getHtmlFromFileLegacy(await file.arrayBuffer()).then((html) => {
-      setresumeHtml(html ?? "");
-      setShowUpload(false);
-      setFileName(file.name);
-    });
+    if (fileType == "application/pdf") {
+      console.log("pdf")
+    } else if (fileType == "application/msword" || fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      // convert to html use legacy until api is fixed
+      getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
+        setresumeHtml(html ?? "");
+        setShowUpload(false);
+        setFileName(file.name);
+      });
+    }
   }
 
   const onLoadEditor = (html?: string) => {
@@ -56,7 +61,7 @@ export default function DocumentEditorPage() {
           onClose={() => { }}
           onFileUpload={onFileUpload}
           onLoadEditor={onLoadEditor} />}
-        {showUpload && <DocumentEditor documentHtml={test_resume_html} documentName={"Test Resume"} />}
+        {showUpload && <DocumentEditor isDemoView documentHtml={test_resume_html} documentName={"Test Resume"} />}
         {!showUpload && <DocumentEditor documentHtml={resumeHtml ?? ""} documentName={fileName} />}
       </ChakraProvider>
 
