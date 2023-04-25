@@ -74,6 +74,20 @@ export default function DocumentEditorPage() {
           <SimpleSidebar
             newDocumentOnClick={() => setShowUpload(true)}
             pdfExportOnClick={() => {
+
+              if (documentContent?.length() ?? 0 < 1) {
+                toast({
+                  title: 'Cannot export empty document',
+                  description: `Start loading your resume and editing with our AI!`,
+                  status: 'info',
+                  duration: 3000,
+                  isClosable: true,
+                })
+
+                return;
+
+              }
+
               toast({
                 title: 'Exporting document to PDF.',
                 description: `Your file ${fileName} is exporting`,
