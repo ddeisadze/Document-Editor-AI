@@ -1,13 +1,13 @@
-*,
+/* *,
 *::before,
 *::after {
     box-sizing: border-box;
-}
+} */
 
-body {
+/* body {
     background-color: #F3F3F3;
     margin: 0;
-}
+} */
 
 .container .ql-editor {
     padding: 0.5in;
@@ -44,11 +44,8 @@ body {
     text-align: center;
 }
 
-/* comment-link {
-    border-bottom: solid 3px;
-} */
 
-comment-link:hover {
+comment-link:hover .comment-link {
     background-color: #fdcccc;
     /* opacity: 0.1; */
     cursor: pointer;

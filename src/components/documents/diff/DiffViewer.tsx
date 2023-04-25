@@ -7,6 +7,7 @@ import { diffLines, diffSentences, diffWords } from 'diff';
 import { Box, Button, Grid, GridItem, HStack, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Stack } from '@chakra-ui/react';
 import CommentDialog, { Message } from '../aicomment/CommentDialog';
 import { AiChat, MessageModel } from '../aicomment/AiComment';
+import 'node_modules/react-quill/dist/quill.snow.css'
 
 interface DiffViewerProps {
     oldText: string;

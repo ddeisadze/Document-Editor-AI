@@ -1,7 +1,6 @@
 import { ReactElement, useEffect, useRef, useState } from 'react';
 import { Box, FormControl, FormLabel, Textarea, Button, Text, Spinner, Grid, GridItem, IconButton, ButtonGroup, Input, InputGroup, InputRightElement } from '@chakra-ui/react';
-import "./CommentDialog.css";
-import { MinusIcon } from '@chakra-ui/icons';
+import "./CommentDialog.module.css";
 import { FaRegPaperPlane, FaWindowMaximize, FaWindowMinimize } from 'react-icons/fa';
 
 interface Props {

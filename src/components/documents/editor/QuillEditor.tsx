@@ -4,7 +4,7 @@ import { useOutsideClick } from "@chakra-ui/react";
 import { DeltaStatic, Sources, Delta as DeltaType } from 'quill';
 import { SelectedText } from "./DocumentEditor";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
-import "./QuillEditor.css"
+import "./QuillEditor.module.css"
 import openai from "../../../utility/openai";
 
 const Delta = Quill.import("delta") as typeof DeltaType;

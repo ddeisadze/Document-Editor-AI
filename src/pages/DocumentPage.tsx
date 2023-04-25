@@ -1,13 +1,10 @@
 import "react-quill/dist/quill.snow.css";
-import "react-quill/dist/quill.snow.css";
-import "./DocumentEditor.css"
+import "./DocumentEditor.module.css"
 import { ChakraProvider, extendTheme, useTheme, useToast } from "@chakra-ui/react"
 import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
 import ResumeModal from "./ImportResumeDialog";
-import { LinkedInCallback } from 'react-linkedin-login-oauth2';
 import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
 import { useState } from "react";
-import { test_resume_html } from "../utility/sampleData";
 import SimpleSidebar from "../components/sidebar/verticalSidebar";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import utf8 from "utf8";
