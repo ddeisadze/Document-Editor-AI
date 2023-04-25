@@ -162,7 +162,10 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ oldText, newText, ...props }) =
                     </Grid>
                 </ModalBody>
                 <ModalFooter>
-                    <Button onClick={() => props.onAcceptChanges(newQuill.current?.editor?.getText() ?? "")} colorScheme='green' mr={3}>
+                    <Button onClick={() => {
+                        props.onAcceptChanges(newQuill.current?.editor?.getText() ?? "");
+                        setOutputVal(new Delta().insert(newQuill.current?.editor?.getText() ?? ""))
+                    }} colorScheme='green' mr={3}>
                         Accept Changes
                     </Button>
                     <Button onClick={() => props.onClose(aiMessages)} variant='outline' colorScheme={'red'}>Close & Cancel</Button>

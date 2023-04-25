@@ -90,15 +90,7 @@ export function AiChat(props: {
             }
 
         },
-        props?.messages ?? [
-            {
-                message: "Ask questions and/or suggestions from our AI model.",
-                sentTime: "just now",
-                sender: "AiDox",
-                direction: "incoming",
-                position: "first",
-            },
-        ]
+        props?.messages ?? []
     );
 
     useEffect(() => {

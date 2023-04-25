@@ -151,7 +151,7 @@ const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = []
                         value={comment}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask our AI..."
+                        placeholder="Ask our AI to help..."
                     />
                     <InputRightElement children={<IconButton
                         size='sm'

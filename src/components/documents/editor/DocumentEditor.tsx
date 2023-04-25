@@ -27,7 +27,9 @@ export interface aiCommentState {
 export interface DocumentEditorProps {
     documentHtml: string,
     documentName: string | undefined,
-    isDemoView?: boolean
+    isDemoView?: boolean,
+
+    onDocumentChangeText?: (content: DeltaStatic) => void
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
@@ -37,6 +39,12 @@ export function DocumentEditor(props: DocumentEditorProps) {
     const [aiComments, setAiComments] = useState<aiCommentState[]>([]);
     const [lastModified, setLastModified] = useState<Date>();
     const [content, setContent] = useState<DeltaStatic>();
+
+    useEffect(() => {
+        if (props?.onDocumentChangeText && content) {
+            props.onDocumentChangeText(content);
+        }
+    }, [content])
 
     useEffect(() => {
         window.addEventListener("click", (e) => {
@@ -118,9 +126,13 @@ export function DocumentEditor(props: DocumentEditorProps) {
     const handleContentChange = (value: DeltaStatic) => {
         setContent(value);
         setLastModified(new Date());
+
+        // #TODO: if content is part of comment-link,  update what we pass to diff viewer
     }
 
     const handleOnAiUpdatedPrompt = useCallback((editedText: string, range?: Range) => {
+        console.log("attrs", editedText, range, content)
+
         if (!editedText || !range || !content) {
             return;
         }
@@ -132,6 +144,8 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
         // Get the attributes for the range
         const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
+
+        console.log("attrs", attributes["commentLink"])
 
         //#todo: we need to update range here also when there are changes made to range from editor
         const updateDelta = content.compose(
@@ -228,9 +242,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
                         onAddComment={addAiConvo}
                         content={content}
                     />
-                </GridItem>
-                <GridItem pl="2" area="footer" position="sticky" bottom={0}>
-                    <DocumentFooter contents={content} documentName={documentName ?? "resume"} />
                 </GridItem>
             </Grid>
         </>

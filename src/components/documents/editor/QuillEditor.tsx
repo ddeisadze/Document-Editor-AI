@@ -74,7 +74,6 @@ class CommentLinkBlot extends Quill.import('blots/inline') {
             return node;
         }
 
-        // Sanitize url value if desired
         node.setAttribute('commentId', value.id);
         node.setAttribute('color', value.color);
 
@@ -87,7 +86,7 @@ class CommentLinkBlot extends Quill.import('blots/inline') {
 
     static formats(node: any) {
         return {
-            commendId: node.getAttribute('commentId'),
+            id: node.getAttribute('commentId'),
             color: node.getAttribute('color')
         }
     }
@@ -121,21 +120,6 @@ const formats = [
     'commentLink'
 ];
 
-// const retrieveEditsForBulletPoints: (currentContent: DeltaStatic) => {}  = (currentContent: DeltaStatic) => {
-//     if (!currentContent){
-//         return [];
-//     }
-
-//     const bulletPoints: string[] = [];
-//     currentContent.ops.forEach((op) => {
-//         if (op.attributes && op.attributes.list === 'bullet') {
-//             bulletPoints.push(op.insert as string);
-//         }
-//     });
-//     console.log('Bullet points:', bulletPoints);
-// }
-
-
 export function QuillEditor(props: quillEditorProps) {
     const [showInlineToolbar, setShowInlineToolbar] = useState<JSX.Element | null>(null);
     const quillRef = React.useRef<ReactQuill>(null);
@@ -167,33 +151,13 @@ export function QuillEditor(props: quillEditorProps) {
     const onLaunchAiClicked = (range: Range, selectedAttrs: SelectedText) => {
         const commentId = new Date().getTime();
 
-
         if (range) {
-            // quillRef?.current?.editor?.formatText(range, format); // apply new background color format
-
             const ops = new Delta()
                 .retain(range.index)
                 .retain(range.length, { commentLink: { id: commentId.toString(), color: getRandomHighlightColor() } });
 
-            // console.log("test1122", quillRef?.current?.editor?.formatText(range, { commentLink: { id: "commentId" } }));
-
-            console.log("launch ops", ops)
-            const newDelta = quillRef?.current?.editor?.updateContents(ops);
-            console.log("launch ops nd", newDelta)
-
-
-
-            // if (updateDelta) {
-            //     quillRef?.current?.editor?.setContents(updateDelta);
-            // }
-
-            // setContent(ops);
+            quillRef?.current?.editor?.updateContents(ops);
         }
-
-        // const ops = new Delta()
-        //     .retain(range?.index)
-        //     .retain(range.length, { ltmatch: match });
-
 
         props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
 

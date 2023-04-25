@@ -3,6 +3,7 @@ import { LinkedInCallback } from 'react-linkedin-login-oauth2';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import DiffViewer from '../components/documents/diff/DiffViewer';
 import { DocumentEditor } from '../components/documents/editor/DocumentEditor';
+import SimpleSidebar from '../components/sidebar/verticalSidebar';
 import { test_resume_html } from '../utility/sampleData';
 import DocumentEditorPage from './DocumentPage';
 
@@ -15,7 +16,9 @@ export default function App() {
                 <Route path="/" Component={DocumentEditorPage} />
                 <Route path="/test-editor" element={
                     <ChakraProvider>
-                        <DocumentEditor documentHtml={test_resume_html} documentName={"Test Resume"} />
+                        <SimpleSidebar>
+                            <DocumentEditor documentHtml={test_resume_html} documentName={"Test Resume"} />
+                        </SimpleSidebar>
                     </ChakraProvider>
                 } />
 
