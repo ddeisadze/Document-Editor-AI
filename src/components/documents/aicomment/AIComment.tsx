@@ -1,17 +1,13 @@
-import React, { useReducer, useState, useEffect } from "react";
+import React, { useReducer, useState, useEffect, ReactElement } from "react";
 import { ChatCompletionRequestMessage } from "openai";
 import {
-    Grid,
-    GridItem,
-    IconButton,
     Button,
 } from "@chakra-ui/react";
-import { ChatIcon } from "@chakra-ui/icons";
 import { Range } from "react-quill";
-import CommentDialog from "./CommentDialog";
+import CommentDialog, { } from "./CommentDialog";
 import openai from "../../../utility/openai";
 
-interface MessageModel {
+export interface MessageModel {
     message: string,
     sentTime: string,
     sender: string,
@@ -19,7 +15,7 @@ interface MessageModel {
     position: string,
 }
 
-const checkIfUpdatedPrompt = (text?: string) => {
+export const returnAiRecs = (text?: string) => {
     if (!text) {
         return null;
     }
@@ -36,19 +32,21 @@ const checkIfUpdatedPrompt = (text?: string) => {
     }
 }
 
-export function AIComment(props: {
-    handleUpdatePrompt?: (updatedText: string, range: Range) => void | undefined;
-    range: Range,
+
+export function AiChat(props: {
+    handleUpdatePrompt?: (updatedText: string, range?: Range) => void | undefined;
+    onNewMessage?: (messages: MessageModel[]) => void;
+    messages?: MessageModel[];
+
+    footerComponent?: ReactElement;
+    headerComponent?: ReactElement;
+
+    top?: string | number
+
+    range?: Range;
     selectedText: string;
-    onRemoveComponent: () => void;
-    top: Number | undefined;
-    bottom: Number | undefined;
-    left: Number | undefined;
-    right: Number | undefined;
     width: string;
-    openConvoKey: String | undefined;
-    componentKey: string;
-    setOpenConvoKey: React.Dispatch<React.SetStateAction<string | undefined>>;
+
 }) {
     const openAiDefaultValue: ChatCompletionRequestMessage[] = [
         {
@@ -70,50 +68,41 @@ export function AIComment(props: {
     const [chatState, ChatDispatch] = useReducer(
         (
             myArray: MessageModel[],
-            { type, value }: { type: string; value: MessageModel }
+            { type, value }: { type: string; value?: MessageModel }
         ): MessageModel[] => {
+            let updatedArr = [];
             switch (type) {
                 case "add":
-                    return [...myArray, value];
+                    if (!value) return myArray;
+                    updatedArr = [...myArray, value];
+                    props?.onNewMessage?.call({}, updatedArr)
+                    return updatedArr;
                 case "remove":
-                    return myArray.filter((_: any, index: any) => index !== value);
+                    updatedArr = myArray.filter((_: any, index: any) => index !== value);
+                    props?.onNewMessage?.call({}, updatedArr)
+                    return updatedArr;
+                case "reset":
+                    return props?.messages ?? myArray
                 default:
-                    return myArray;
+                    updatedArr = myArray;
+                    props?.onNewMessage?.call({}, updatedArr)
+                    return updatedArr;
             }
+
         },
-        [
-            {
-                message: "Ask questions and/or suggestions from our AI model.",
-                sentTime: "just now",
-                sender: "AiDox",
-                direction: "incoming",
-                position: "first",
-            },
-        ]
+        props?.messages ?? []
     );
 
-    console.log(chatState, "chat state")
+    useEffect(() => {
+        ChatDispatch({
+            type: "reset"
+        })
+    }, [props.messages])
 
     const [openAiState, setOpenAiState] =
         useState<ChatCompletionRequestMessage[]>(openAiDefaultValue);
 
     const [openAiLoading, setOpenAiLoading] = useState<boolean>(false);
-
-    const [aiAnswer, setAiAnswer] = useState<string>("");
-
-    const [isMinimized, setMinimized] = useState<boolean>(false);
-
-    useEffect(() => {
-        if (props.openConvoKey) {
-            setMinimized(props.openConvoKey != props.componentKey);
-        }
-    }, [props.openConvoKey]);
-
-    useEffect(() => {
-        if (!isMinimized) {
-            props.setOpenConvoKey(props.componentKey);
-        }
-    }, [isMinimized]);
 
     const handleMessageSend = (question: string) => {
         ChatDispatch({
@@ -148,8 +137,6 @@ export function AIComment(props: {
 
                 setOpenAiLoading(false);
 
-                setAiAnswer(answer.content);
-
                 ChatDispatch({
                     type: "add",
                     value: {
@@ -169,78 +156,25 @@ export function AIComment(props: {
 
     const messagesToDialog = chatState.map((item) => ({ text: item?.message ?? "", isUser: item?.sender != "AiDox", time: new Date() }));
 
-    console.log(messagesToDialog, "md")
-
     return (
         <>
-            {isMinimized ? (
-                <IconButton
-                    position="absolute"
-                    float={"left"}
-                    top={props.top?.toFixed(0)}
-                    onClick={() => setMinimized(!isMinimized)}
-                    size={"sm"}
-                    aria-label="Search database"
-                    icon={<ChatIcon onClick={() => setMinimized(!isMinimized)} />}
-                />
-            ) : (
-                <CommentDialog
-                    onMinimize={() => setMinimized(true)}
-                    onResolve={props.onRemoveComponent}
-                    onSubmit={comment => handleMessageSend(comment)}
-                    width={props.width}
-
-                    messages={messagesToDialog}
-                    updateTextButton={checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase())
-                        && <Button
-                            onClick={e => props.handleUpdatePrompt?.call({}, checkIfUpdatedPrompt(chatState[chatState.length - 1].message) ?? "", props.range)}>Update document</Button>}
-
-                    typingIndicator={openAiLoading}
-                    top={props.top?.toFixed(0)} />
-
-                // <Grid
-                //     templateAreas={`"header"
-                //   "main"
-                //   "footer"`}
-                //     gridTemplateRows={'50px 1fr'}
-                //     gridTemplateColumns={'1fr'}
-                //     width="100%"
-                //     maxWidth={props.width}
-                //     maxHeight="200px"
-                //     position="absolute"
-                //     top={props.top?.toFixed(0)}
-                //     height={"200px"}
-                //     gap='1'
-                // >
-                //     <GridItem pl='2' area={'header'}>
-                //         <IconButton onClick={() => setMinimized(true)} size={"sm"} float={"right"} margin={"5px"} aria-label='Search database' icon={<MinusIcon />} />
-                //     </GridItem>
-                //     <GridItem pl='2' area={'main'} maxHeight="500px">
-                //         {/* <ChatContainer>
-                //             <MessageList typingIndicator={openAiLoading && <TypingIndicator content="AiDox is typing" />}>
-                //                 {chatState.map((item: any) => <Message model={item} />)}
-                //                 {checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase()) &&
-                //                     <Message model={{
-                //                         direction: "incoming",
-                //                         type: "custom",
-                //                         position: 'last'
-                //                     }}>
-                //                         <Message.CustomContent>
-                //                             <Button onClick={e => props.handleUpdatePrompt?.call({}, checkIfUpdatedPrompt(chatState[chatState.length - 1].message) ?? "", props.range)}>Add generated prompt to Document</Button>
-                //                         </Message.CustomContent>
-                //                     </Message>}
-                //             </MessageList>
-                //             <MessageInput onSend={e => handleMessageSend(e)} placeholder="Type message here" attachButton={false} />
-                //         </ChatContainer> */}
-                //         <CommentDialog messages={chatState.map((item) => ({ text: item?.message ?? "", isUser: item?.sender != "AiDox", time: new Date() }))} typingIndicator={openAiLoading} isOpen={true} onSubmit={() => { }} />
-
-                //     </GridItem>
-                //     <GridItem pl='2' area={'footer'} alignItems="center" justifyContent='center' alignSelf="center">
-                //         <Button colorScheme='teal' variant='solid' onClick={props.onRemoveComponent}>Resolve</Button>
-                //     </GridItem>
-                // </Grid>
-            )
-            }
+            <CommentDialog
+                footerComponent={props.footerComponent}
+                headerComponent={props.headerComponent}
+                onMessageSend={comment => handleMessageSend(comment)}
+                width={props.width}
+                messages={messagesToDialog}
+                top={props.top}
+                messageReactionButtons={[
+                    returnAiRecs(chatState[chatState.length - 1]?.message?.toLowerCase())
+                    && <Button
+                        onClick={e => props.handleUpdatePrompt?.call({}, returnAiRecs(chatState[chatState.length - 1]?.message) ?? "", props.range)}>Insert change</Button>,
+                    // checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase())
+                    // && <Button
+                    //     onClick={onOpen}>Compare change</Button>
+                ]}
+                typingIndicator={openAiLoading}
+            />
         </>
     );
 }

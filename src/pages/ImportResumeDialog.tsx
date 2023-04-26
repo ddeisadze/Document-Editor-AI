@@ -23,7 +23,6 @@ type ModalProps = {
 };
 
 const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [linkedinAccessCode, setLinkedinAccessCode] = useState<string>();
 
     const { linkedInLogin } = useLinkedIn({
@@ -54,7 +53,6 @@ const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
         const file = event.target.files && event.target.files[0];
         console.log(file?.type)
         if (file) {
-            setSelectedFile(file);
             props.onFileUpload(file)
         } else {
             alert("Please select a PDF or Word document.");
@@ -74,27 +72,14 @@ const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
     const handleImportFromLinkedIn = () => {
         // Connect to LinkedIn API to import user's profile
         console.log("Import from LinkedIn clicked");
-        // const restliClient = new RestliClient();
-        // restliClient.setDebugParams({ enabled: true });
-
         linkedInLogin.call({});
-
-        // fetch("https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=78jz6w0ihwoyew&redirect_uri=6clgBB3rOR56fbYh&state=foobar&scope=r_liteprofile%20r_emailaddress%20w_member_social", {
-        //     method: "GET",
-        //     mode: "no-cors",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-
-        // }).then(resp => console.log(resp)).catch(e => console.log(e))
-
-
     };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} >
             <ModalOverlay bg='blackAlpha.300'
-                backdropFilter='blur(8px) hue-rotate(90deg)' />
+                backdropFilter='blur(8px) hue-rotate(90deg)'
+            />
             <ModalContent>
                 <ModalHeader>Import Your Resume</ModalHeader>
                 <ModalBody>
@@ -103,19 +88,10 @@ const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
                         type="file"
                         style={{ display: "none" }}
                         onChange={handleFileChange}
-                        accept=".pdf,.doc,.docx"
+                        accept=".doc,.docx"
                     />
                     <HStack spacing={2}>
-                        {/* <Button leftIcon={<Icon as={FaLinkedin} />} onClick={handleImportFromLinkedIn}>
-                            Linkedin
-                        </Button> */}
-                        {/* <Button
-                            leftIcon={<Icon as={FaGoogle} />}
-                            onClick={handleImportFromGoogleDrive}
-                        >
-                            Google
-                        </Button> */}
-                        <Button leftIcon={<Icon as={FaFileUpload} />} onClick={handleUploadResume}>File (.doc, .docx, .pdf)</Button>
+                        <Button leftIcon={<Icon as={FaFileUpload} />} onClick={handleUploadResume}>File (.doc, .docx)</Button>
                         <Button leftIcon={<Icon as={FaClipboard} />} onClick={() => props.onLoadEditor()}>Copy and Paste</Button>
 
                     </HStack>
