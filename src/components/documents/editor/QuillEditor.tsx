@@ -4,8 +4,11 @@ import { useOutsideClick } from "@chakra-ui/react";
 import { DeltaStatic, Sources, Delta as DeltaType } from 'quill';
 import { SelectedText } from "./DocumentEditor";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
-import "./QuillEditor.module.css"
+import styles from "./QuillEditor.module.css"
+// import "react-quill/dist/quill.snow.css";
 import openai from "../../../utility/openai";
+
+console.log(styles.commentLink)
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -62,7 +65,7 @@ function getRandomHighlightColor() {
 class CommentLinkBlot extends Quill.import('blots/inline') {
     static blotName = "commentLink";
     static tagName = "comment-link";
-    static className = "comment-link"
+    static className = styles.commentLink
 
     static create(value?: {
         id: string,
@@ -199,8 +202,11 @@ export function QuillEditor(props: quillEditorProps) {
 
     return <>
         <ReactQuill
+            style={{
+                backgroundColor: "white",
+            }}
             placeholder="Copy paste resume from Google Drive or any file here...."
-            className="container"
+            className={"container"}
             ref={quillRef}
             value={props.content ?? props.initialHtmlData ?? ""}
             onChange={handleChange}

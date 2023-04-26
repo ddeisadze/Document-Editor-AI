@@ -50,27 +50,29 @@ export function AiCommentManager(props: aiChatManagerProps) {
         setIsOpen(props.isOpen);
     }, [props.isOpen]);
 
-    const componentToDisp = isOpen ? <AiChat
-        footerComponent={<Button variant={"outline"} colorScheme='orange' onClick={props.onRemoveComponent}>Resolve Chat</Button>}
-        headerComponent={<ButtonGroup variant='outline' size={"sm"} spacing='2' float={"right"}>
-            <IconButton onClick={() => props?.onCloseConvo?.call({})} size={"sm"} aria-label='Minimize chat' icon={<FaWindowMinimize />} />
-            <IconButton onClick={() => setIsDiffOpen(true)} size={"sm"} colorScheme="yellow" aria-label='Maximize to window' icon={<FaWindowMaximize />} />
-        </ButtonGroup>}
-        top={props.top?.toFixed(0)}
-        width={props.width}
-        range={props.range}
-        selectedText={props.selectedText}
-        onNewMessage={onNewMessageFromChild}
-        messages={aiMessages} /> : <IconButton
-        position="absolute"
-        float={"left"}
-        top={props.top?.toFixed(0)}
-        onClick={() => setIsOpen(!isOpen)}
-        size={"sm"}
-        aria-label="Search database"
-        icon={<ChatIcon onClick={() => setIsOpen(!isOpen)} />} />;
-
-    console.log(returnAiRecs(aiMessages[aiMessages.length - 1]?.message));
+    const componentToDisp = isOpen ?
+        <AiChat
+            footerComponent={<Button variant={"outline"} colorScheme='orange' onClick={props.onRemoveComponent}>Resolve Chat</Button>}
+            headerComponent={<ButtonGroup variant='outline' size={"sm"} spacing='2' float={"right"}>
+                <IconButton onClick={() => props?.onCloseConvo?.call({})} size={"sm"} aria-label='Minimize chat' icon={<FaWindowMinimize />} />
+                <IconButton onClick={() => setIsDiffOpen(true)} size={"sm"} colorScheme="yellow" aria-label='Maximize to window' icon={<FaWindowMaximize />} />
+            </ButtonGroup>}
+            top={props.top?.toFixed(0)}
+            width={props.width}
+            range={props.range}
+            selectedText={props.selectedText}
+            onNewMessage={onNewMessageFromChild}
+            messages={aiMessages} /> :
+        <IconButton
+            position="absolute"
+            float={"left"}
+            top={props.top?.toFixed(0)}
+            onClick={() => setIsOpen(!isOpen)}
+            size={"sm"}
+            aria-label="Search database"
+            colorScheme={"blackAlpha"}
+            icon={<ChatIcon onClick={() => setIsOpen(!isOpen)} />}
+        />;
 
     return <>
         {componentToDisp}

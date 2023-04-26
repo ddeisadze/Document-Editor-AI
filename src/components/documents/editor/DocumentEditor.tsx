@@ -6,11 +6,10 @@ import { Grid, GridItem, Spacer, Text } from "@chakra-ui/react";
 import DocumentTitle from "./DocumentTitle";
 import Quill, { Delta as DeltaType, DeltaStatic, RangeStatic } from 'quill'
 import { QuillEditor } from "./QuillEditor";
-import { DocumentFooter } from "./DocumentFooter";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
-export interface aiCommentState {
+interface aiCommentState {
     id: string;
     isOpen: boolean;
     range: Range;
@@ -24,7 +23,7 @@ export interface aiCommentState {
     width: string;
 }
 
-export interface DocumentEditorProps {
+interface DocumentEditorProps {
     documentHtml: string,
     documentName: string | undefined,
     isDemoView?: boolean,

@@ -1,4 +1,3 @@
-import "react-quill/dist/quill.snow.css";
 import "./DocumentEditor.module.css"
 import { ChakraProvider, extendTheme, useTheme, useToast } from "@chakra-ui/react"
 import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
