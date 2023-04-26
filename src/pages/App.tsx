@@ -9,8 +9,8 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/linkedin" element={<LinkedInCallback />} />
-                <Route path="/" Component={DocumentEditorPage} />
-                <Route path="/manager" Component={DocumentManager} />
+                <Route path="/document/:id" Component={DocumentEditorPage} />
+                <Route path="/" Component={DocumentManager} />
 
             </Routes>
         </BrowserRouter>

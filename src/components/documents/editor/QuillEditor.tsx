@@ -228,20 +228,51 @@ export function QuillEditor(props: quillEditorProps) {
 
     };
 
-    useEffect(() => {
-        if (quillRef.current) {
-          const editorNode = quillRef.current.getEditor().root;
-          const width = editorNode.clientWidth;
-        const height = editorNode.clientHeight / 2;
-        html2canvas(editorNode, { width, height }).then(canvas => {
-            const dataUrl = canvas.toDataURL();
-            localStorage.setItem('thumbnail', dataUrl);
-            console.log(dataUrl);
+    // useEffect(() => {
+    //     if (quillRef.current) {
+    //       const editorNode = quillRef.current.getEditor().root;
+    //       const width = editorNode.clientWidth;
+    //     const height = editorNode.clientHeight / 2;
+    //     html2canvas(editorNode, { width, height }).then(canvas => {
+    //         const dataUrl = canvas.toDataURL();
+    //         localStorage.setItem('thumbnail', dataUrl);
+    //         console.log(dataUrl);
             
-          });
-        }
-      }, [props.content]);
+    //       });
+    //     }
+    //   }, [props.content]);
     
+    // useEffect(() => {
+    //     if (quillRef.current) {
+    //       const editorNode = quillRef.current.getEditor().root;
+    //       const width = editorNode.clientWidth;
+    //       const height = editorNode.clientHeight / 2;
+    //       html2canvas(editorNode, { width, height }).then(canvas => {
+    //         const dataUrl = canvas.toDataURL();
+    //         const documentName = props.documentName;
+    //         const initialHtmlData = props.initialHtmlData;
+            
+    //         let existingDocuments = [];
+    //         const documentsFromLocalStorage = localStorage.getItem('documents');
+    //         if (documentsFromLocalStorage && typeof documentsFromLocalStorage === 'string') {
+    //           existingDocuments = JSON.parse(documentsFromLocalStorage);
+    //         }
+            
+    //         const existingDocumentIndex = existingDocuments.findIndex((document: any) => document.documentId === documentId);
+    //         if (existingDocumentIndex !== -1) {
+    //           existingDocuments[existingDocumentIndex].thumbnail = dataUrl;
+    //           existingDocuments[existingDocumentIndex].documentName = documentName;
+    //           existingDocuments[existingDocumentIndex].content = props.content;
+    //           existingDocuments[existingDocumentIndex].initialHtmlData = initialHtmlData;
+    //         } else {
+    //           existingDocuments.push({ content: props.content, documentName: documentName, thumbnail: dataUrl, documentId: documentId, initialHtmlData: initialHtmlData });
+    //         }
+            
+    //         localStorage.setItem('documents', JSON.stringify(existingDocuments));
+    //       });
+    //     }
+    //   }, [props.content, props.documentName, props.initialHtmlData]);
+
       useEffect(() => {
         if (quillRef.current) {
           const editorNode = quillRef.current.getEditor().root;
@@ -249,8 +280,9 @@ export function QuillEditor(props: quillEditorProps) {
           const height = editorNode.clientHeight / 2;
           html2canvas(editorNode, { width, height }).then(canvas => {
             const dataUrl = canvas.toDataURL();
-            const documentName = props.documentName; // replace with your own logic to get the document name
-            
+            const documentName = props.documentName; 
+            const initialHtmlData = props.initialHtmlData;
+
             let existingDocuments = [];
             const documentsFromLocalStorage = localStorage.getItem('documents');
             if (documentsFromLocalStorage && typeof documentsFromLocalStorage === 'string') {
@@ -263,7 +295,8 @@ export function QuillEditor(props: quillEditorProps) {
               existingDocument.documentName = documentName;
               existingDocument.content = props.content;
             } else {
-              existingDocuments.push({ content: props.content, documentName: documentName, thumbnail: dataUrl });
+              const documentId = new Date().getTime();
+              existingDocuments.push({ content: props.content, documentName: documentName, thumbnail: dataUrl, documentId: documentId, initialHtmlData: initialHtmlData });
             }
             
             localStorage.setItem('documents', JSON.stringify(existingDocuments));

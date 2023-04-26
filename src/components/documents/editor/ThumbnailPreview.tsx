@@ -1,8 +1,11 @@
 import React from "react";
 import { Card, Image, CardBody, CardFooter } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 
-function ThumbnailPreview({ thumbnail }: { thumbnail: string | undefined }) {
+
+function ThumbnailPreview({ thumbnail, documentId, initialHtmlData }: { thumbnail: string | undefined,  documentId: String | undefined, initialHtmlData: String | undefined }) {
   return (
+    <Link to={`document/${documentId}`} state={{ some: "value" }}>
     <Card
       _hover={{
         border: "2px solid #10a33f",
@@ -15,6 +18,7 @@ function ThumbnailPreview({ thumbnail }: { thumbnail: string | undefined }) {
       padding="0px"
       maxWidth="200px"
       maxHeight="270px"
+      height="270px"
       minHeight="270px"
       minWidth="100px"
     >
@@ -40,6 +44,7 @@ function ThumbnailPreview({ thumbnail }: { thumbnail: string | undefined }) {
         yoo
       </CardFooter>
     </Card>
+    </Link>
   );
 }
 

@@ -9,7 +9,7 @@ import {
   PopoverContent,
   ButtonGroup,
   VStack,
-  PopoverArrow,
+  ChakraProvider,
   PopoverCloseButton,
   Grid,
 } from "@chakra-ui/react";
@@ -78,9 +78,9 @@ const ThumbnailPreviewRow = ({
   console.log("yooo", Array.isArray(documents), typeof documents);
 
   return documents && Array.isArray(documents) ? (
-    <Grid templateColumns="repeat(4, 1fr)" gap={4} mt={8} mr={60} ml={60}>
-      {documents.map((document: any) => (
-        <ThumbnailPreview thumbnail={document.thumbnail} />
+    <Grid templateColumns="repeat(auto-fit, minmax(190px, 4fr))" gap={4} mt={8} mx={['auto', '8%', '10%', '15%', '25%']}  autoRows="auto">
+      {documents.map((document: any, index: number) => (
+        <ThumbnailPreview documentId={document.id} initialHtmlData={document.initialHtmlData} key={index} thumbnail={document.thumbnail} />
       ))}
     </Grid>
   ) : null;
@@ -156,7 +156,7 @@ export function DocumentManager() {
   }
 
   return (
-    <div className="">
+    <ChakraProvider>
       <GalleryNavbar />
       {isCreatingNew ? (
         <MyUploader />
@@ -194,6 +194,7 @@ export function DocumentManager() {
           {/* </PopoverBody> */}
         </PopoverContent>
       </Popover>
-    </div>
+    </ChakraProvider>
+    
   );
 }

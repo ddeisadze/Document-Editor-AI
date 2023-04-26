@@ -52,7 +52,7 @@ export default function DocumentEditorPage() {
     <div className="App">
       <ChakraProvider theme={theme}>
         {showUpload && <ResumeModal
-          isOpen={true}
+          isOpen={false}
           onClose={() => { }}
           onFileUpload={onFileUpload}
           onLoadEditor={onLoadEditor} />}
