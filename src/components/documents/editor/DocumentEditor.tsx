@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AiChat } from "../aicomment/AiComment";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import { Range } from "react-quill";
 import { Grid, GridItem, Spacer, Text } from "@chakra-ui/react";

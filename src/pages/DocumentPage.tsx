@@ -1,4 +1,3 @@
-import "./DocumentEditor.module.css"
 import { ChakraProvider, extendTheme, useTheme, useToast } from "@chakra-ui/react"
 import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
 import ResumeModal from "./ImportResumeDialog";
