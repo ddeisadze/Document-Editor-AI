@@ -1,6 +1,6 @@
 import { ReactElement, useEffect, useRef, useState } from 'react';
 import { Box, FormControl, FormLabel, Textarea, Button, Text, Spinner, Grid, GridItem, IconButton, ButtonGroup, Input, InputGroup, InputRightElement } from '@chakra-ui/react';
-import "./CommentDialog.module.css";
+import styles from "./CommentDialog.module.css";
 import { FaRegPaperPlane, FaWindowMaximize, FaWindowMinimize } from 'react-icons/fa';
 
 interface Props {
@@ -31,10 +31,10 @@ interface WaveSpinnerProps {
 const WaveSpinner: React.FC<WaveSpinnerProps> = ({ color, size }) => {
     const style = { color: color ?? "#000", size: size ?? "2em" };
     return (
-        <div className="wave-spinner" style={style}>
-            <div className="wave-dot"></div>
-            <div className="wave-dot" style={{ animationDelay: "-0.16s" }}></div>
-            <div className="wave-dot" style={{ animationDelay: "-0.32s" }}></div>
+        <div className={styles.waveSpinner} style={style}>
+            <div className={styles.waveDot}></div>
+            <div className={styles.waveDot} style={{ animationDelay: "-0.16s" }}></div>
+            <div className={styles.waveDot} style={{ animationDelay: "-0.32s" }}></div>
         </div>
     );
 };

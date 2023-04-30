@@ -1,11 +1,18 @@
 import React from "react";
 import { Card, Image, CardBody, CardFooter } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
+import Link from 'next/link'
 
-
-function ThumbnailPreview({ thumbnail, documentId, initialHtmlData }: { thumbnail: string | undefined,  documentId: String | undefined, initialHtmlData: String | undefined }) {
+function ThumbnailPreview({
+  thumbnail,
+  documentId,
+}: {
+  thumbnail: string | undefined;
+  documentId: string;
+}) {
   return (
-    <Link to={`document/${documentId}`} state={{ some: "value" }}>
+    // <Link to={`document/${documentId}`} state={{ some: "value" }}>
+    <Link href={`/files/${encodeURIComponent(documentId)}`}>
+
     <Card
       _hover={{
         border: "2px solid #10a33f",

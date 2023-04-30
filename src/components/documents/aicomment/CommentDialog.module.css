@@ -1,9 +1,9 @@
-.wave-spinner {
+.waveSpinner {
     display: inline-flex;
     position: relative;
 }
 
-.wave-dot {
+.waveDot {
     width: var(--size, 0.3em);
     height: var(--size, 0.3em);
     margin-right: 0.3em;

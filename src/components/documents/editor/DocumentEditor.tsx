@@ -4,257 +4,283 @@ import { AiCommentManager } from "../aicomment/AiCommentManager";
 import { Range } from "react-quill";
 import { Grid, GridItem, Spacer, Text } from "@chakra-ui/react";
 import DocumentTitle from "./DocumentTitle";
-import Quill, { Delta as DeltaType, DeltaStatic, RangeStatic } from 'quill'
+import Quill, { Delta as DeltaType, DeltaStatic, RangeStatic } from "quill";
 import { QuillEditor } from "./QuillEditor";
-import { DocumentFooter } from "./DocumentFooter";
-
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
-export interface aiCommentState {
-    id: string;
-    isOpen: boolean;
-    range: Range;
+interface aiCommentState {
+  id: string;
+  isOpen: boolean;
+  range: Range;
 
-    selectedText: string;
+  selectedText: string;
 
-    top?: Number | undefined;
-    bottom?: Number | undefined;
-    left?: Number | undefined;
-    right?: Number | undefined;
-    width: string;
+  top?: Number | undefined;
+  bottom?: Number | undefined;
+  left?: Number | undefined;
+  right?: Number | undefined;
+  width: string;
 }
 
-export interface DocumentEditorProps {
-    documentHtml: string,
-    documentName: string | undefined,
-    isDemoView?: boolean,
+interface DocumentEditorProps {
+  documentHtml?: string;
+  documentName: string | undefined;
+  isDemoView?: boolean;
+  content: DeltaStatic | undefined;
 
-    onDocumentChangeText?: (content: DeltaStatic) => void
+  onDocumentChangeText?: (content: DeltaStatic) => void;
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
-    const commentWidth = "300px";
+  const commentWidth = "300px";
 
-    const [documentName, setDocumentName] = useState<string | undefined>(props.documentName);
-    const [aiComments, setAiComments] = useState<aiCommentState[]>([]);
-    const [lastModified, setLastModified] = useState<Date>();
-    const [content, setContent] = useState<DeltaStatic>();
+  const [documentName, setDocumentName] = useState<string | undefined>(
+    props.documentName
+  );
+  const [aiComments, setAiComments] = useState<aiCommentState[]>([]);
+  const [lastModified, setLastModified] = useState<Date>();
+  const [content, setContent] = useState<DeltaStatic>();
 
-    useEffect(() => {
-        if (props?.onDocumentChangeText && content) {
-            props.onDocumentChangeText(content);
-        }
-    }, [content])
+  useEffect(() => {
+    if (props?.onDocumentChangeText && content) {
+      props.onDocumentChangeText(content);
+    }
+  }, [content]);
 
-    useEffect(() => {
-        window.addEventListener("click", (e) => {
-            const target = e.target as HTMLElement;
-            const commentId = target.getAttribute("commentId");
+  useEffect(() => {
+    window.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const commentId = target.getAttribute("commentId");
 
-            if (target.tagName.toLowerCase() === "comment-link" && commentId) {
-                console.log("comment", commentId)
-                setAiComments(prevState => prevState.map(p => {
-
-                    console.log(p.id === commentId.trim())
-                    if (p.id === commentId.trim()) {
-                        p.isOpen = true
-                    } else {
-                        p.isOpen = false;
-                    }
-
-                    return p;
-                }))
+      if (target.tagName.toLowerCase() === "comment-link" && commentId) {
+        console.log("comment", commentId);
+        setAiComments((prevState) =>
+          prevState.map((p) => {
+            console.log(p.id === commentId.trim());
+            if (p.id === commentId.trim()) {
+              p.isOpen = true;
+            } else {
+              p.isOpen = false;
             }
-        });
 
-        if (props.isDemoView) {
-            const commentId = "test";
-            const range: RangeStatic = {
-                index: 0,
-                length: 40
-            };
+            return p;
+          })
+        );
+      }
+    });
 
-            // const demoComp = <AiChatManagerDocument
-            //     componentKey={commentId}
-            //     width={commentWidth}
-            //     range={range}
-            //     handleUpdatePrompt={handleOnAiUpdatedPrompt}
-            //     onRemoveComponent={() => removeAiConvo(commentId, range)}
-            //     selectedText={"Text"}
-            //     openConvoKey={openCommentId}
-            //     setOpenConvoKey={setOpenCommentId}
-            //     onOpenDiffView={() => { }}
-            // />;
+    if (props.isDemoView) {
+      const commentId = "test";
+      const range: RangeStatic = {
+        index: 0,
+        length: 40,
+      };
 
-            // setAiConversationsChildren([
-            //     {
-            //         id: commentId,
-            //         range: range,
-            //         component: (
-            //             demoComp
-            //         ),
-            //     },
-            //     {
-            //         id: commentId,
-            //         range: range,
-            //         component: (
-            //             demoComp
-            //         ),
-            //     }
-            // ]);
-        }
+      // const demoComp = <AiChatManagerDocument
+      //     componentKey={commentId}
+      //     width={commentWidth}
+      //     range={range}
+      //     handleUpdatePrompt={handleOnAiUpdatedPrompt}
+      //     onRemoveComponent={() => removeAiConvo(commentId, range)}
+      //     selectedText={"Text"}
+      //     openConvoKey={openCommentId}
+      //     setOpenConvoKey={setOpenCommentId}
+      //     onOpenDiffView={() => { }}
+      // />;
 
-    }, []);
+      // setAiConversationsChildren([
+      //     {
+      //         id: commentId,
+      //         range: range,
+      //         component: (
+      //             demoComp
+      //         ),
+      //     },
+      //     {
+      //         id: commentId,
+      //         range: range,
+      //         component: (
+      //             demoComp
+      //         ),
+      //     }
+      // ]);
+    }
+  }, []);
 
-    const removeAiConvo = (key: string, range: Range) => {
-        setAiComments((prev) => {
-            return prev.filter((i) => i.id != key);
-        });
+  const removeAiConvo = (key: string, range: Range) => {
+    setAiComments((prev) => {
+      return prev.filter((i) => i.id != key);
+    });
 
-        if (!range) {
-            return;
-        }
-
-        const updateDelta = content?.compose(
-            new Delta()
-                .retain(range.index)
-                .retain(range.length, { 'background': {} }))
-
-        setContent(updateDelta);
-    };
-
-    const handleContentChange = (value: DeltaStatic) => {
-        console.log(value, "value");
-        setContent(value);
-        setLastModified(new Date());
-
-        // #TODO: if content is part of comment-link,  update what we pass to diff viewer
+    if (!range) {
+      return;
     }
 
-    const handleOnAiUpdatedPrompt = useCallback((editedText: string, range?: Range) => {
-        console.log("attrs", editedText, range, content)
+    const updateDelta = content?.compose(
+      new Delta().retain(range.index).retain(range.length, { background: {} })
+    );
 
-        if (!editedText || !range || !content) {
-            return;
-        }
+    setContent(updateDelta);
+  };
 
-        const start = range.index; // The start index of the range
-        const end = start + range.length;
+  const handleContentChange = (value: DeltaStatic) => {
+    console.log(value, "value");
+    setContent(value);
+    setLastModified(new Date());
 
-        const rangeDelta = content.slice(start, end);
+    // #TODO: if content is part of comment-link,  update what we pass to diff viewer
+  };
 
-        // Get the attributes for the range
-        const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
+  const handleOnAiUpdatedPrompt = useCallback(
+    (editedText: string, range?: Range) => {
+      console.log("attrs", editedText, range, content);
 
-        console.log("attrs", attributes["commentLink"])
+      if (!editedText || !range || !content) {
+        return;
+      }
 
-        //#todo: we need to update range here also when there are changes made to range from editor
-        const updateDelta = content.compose(
-            new Delta()
-                .retain(range.index)
-                .delete(range.length)
-                .insert(editedText, attributes));
+      const start = range.index; // The start index of the range
+      const end = start + range.length;
 
-        setContent(updateDelta);
-    }, [content]);
+      const rangeDelta = content.slice(start, end);
 
-    const addAiConvo = (commentId: string, range: Range, selectedAttrs: SelectedText) => {
-        setAiComments(prevState => {
-            const oldVals = prevState.map(c => ({
-                ...c,
-                isOpen: false
-            }));
+      // Get the attributes for the range
+      const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
 
-            const newList = [...oldVals, {
-                id: commentId,
-                range: range,
-                top: selectedAttrs.top,
-                bottom: selectedAttrs.bottom,
-                left: selectedAttrs.left,
-                right: selectedAttrs.right,
-                selectedText: selectedAttrs.text,
-                width: commentWidth,
-                isOpen: true,
-            }]
+      console.log("attrs", attributes["commentLink"]);
 
-            return newList;
-        })
-    }
+      //#todo: we need to update range here also when there are changes made to range from editor
+      const updateDelta = content.compose(
+        new Delta()
+          .retain(range.index)
+          .delete(range.length)
+          .insert(editedText, attributes)
+      );
 
-    const chatComponents = aiComments.map(aiComment =>
-        <AiCommentManager
-            commentId={aiComment.id}
-            width={commentWidth}
-            range={aiComment.range}
-            handleUpdatePrompt={handleOnAiUpdatedPrompt}
-            onRemoveComponent={() => removeAiConvo(aiComment.id, aiComment.range)}
-            onOpenConvo={() => setAiComments(prevState => prevState.map(p => {
-                if (p.id === aiComment.id) {
-                    p.isOpen = true
-                } else {
-                    p.isOpen = false;
-                }
+      setContent(updateDelta);
+    },
+    [content]
+  );
 
-                return p;
-            }))}
-            onCloseConvo={() => setAiComments(prevState => prevState.map(p => {
-                p.isOpen = false;
-                return p;
-            }))}
-            selectedText={aiComment.selectedText}
-            top={aiComment.top}
-            bottom={aiComment.bottom}
-            left={aiComment.left}
-            right={aiComment.right}
-            isOpen={aiComment.isOpen} />);
+  const addAiConvo = (
+    commentId: string,
+    range: Range,
+    selectedAttrs: SelectedText
+  ) => {
+    setAiComments((prevState) => {
+      const oldVals = prevState.map((c) => ({
+        ...c,
+        isOpen: false,
+      }));
 
-    console.table(chatComponents)
+      const newList = [
+        ...oldVals,
+        {
+          id: commentId,
+          range: range,
+          top: selectedAttrs.top,
+          bottom: selectedAttrs.bottom,
+          left: selectedAttrs.left,
+          right: selectedAttrs.right,
+          selectedText: selectedAttrs.text,
+          width: commentWidth,
+          isOpen: true,
+        },
+      ];
 
-    return (
-        <>
-            <Grid
-                marginLeft={"5%"}
-                // marginRight={"5
-                templateAreas={`"header header"
+      return newList;
+    });
+  };
+
+  const chatComponents = aiComments.map((aiComment) => (
+    <AiCommentManager
+      commentId={aiComment.id}
+      width={commentWidth}
+      range={aiComment.range}
+      handleUpdatePrompt={handleOnAiUpdatedPrompt}
+      onRemoveComponent={() => removeAiConvo(aiComment.id, aiComment.range)}
+      onOpenConvo={() =>
+        setAiComments((prevState) =>
+          prevState.map((p) => {
+            if (p.id === aiComment.id) {
+              p.isOpen = true;
+            } else {
+              p.isOpen = false;
+            }
+
+            return p;
+          })
+        )
+      }
+      onCloseConvo={() =>
+        setAiComments((prevState) =>
+          prevState.map((p) => {
+            p.isOpen = false;
+            return p;
+          })
+        )
+      }
+      selectedText={aiComment.selectedText}
+      top={aiComment.top}
+      bottom={aiComment.bottom}
+      left={aiComment.left}
+      right={aiComment.right}
+      isOpen={aiComment.isOpen}
+    />
+  ));
+
+  console.table(chatComponents);
+
+  return (
+    <>
+      <Grid
+        marginLeft={"5%"}
+        // marginRight={"5
+        templateAreas={`"header header"
                   "main comments"
                   "footer comments"`}
-                gridTemplateRows={'50px 1fr 40px'}
-                gridTemplateColumns={`1fr ${commentWidth}`}
-                gap='1'
+        gridTemplateRows={"50px 1fr 40px"}
+        gridTemplateColumns={`1fr ${commentWidth}`}
+        gap="1"
+      >
+        <GridItem pl="2" area={"header"}>
+          <DocumentTitle
+            documentName={documentName}
+            onDocumentNameChange={(newName) => setDocumentName(newName)}
+          />
+          {lastModified && (
+            <Text
+              fontSize="sm"
+              color="gray"
+              fontStyle="italic"
+              marginBottom="0.5rem"
             >
-                <GridItem pl='2' area={'header'}>
-                    <DocumentTitle documentName={documentName} onDocumentNameChange={(newName) => setDocumentName(newName)} />
-                    {lastModified && (
-                        <Text
-                            fontSize="sm"
-                            color="gray"
-                            fontStyle="italic"
-                            marginBottom="0.5rem">
-                            Last modified: {lastModified.toLocaleString()}
-                        </Text>)}
-                </GridItem>
-                <GridItem pl='2' area={'comments'} maxHeight="100%" overflowY="auto">
-                    {chatComponents}
-                </GridItem>
-                <GridItem pl='2' area={'main'} marginTop="1rem">
-                    <QuillEditor
-                        initialHtmlData={props.documentHtml}
-                        onContentChange={handleContentChange}
-                        onAddComment={addAiConvo}
-                        content={content}
-                        documentName={documentName}
-                    />
-                </GridItem>
-            </Grid>
-        </>
-    );
+              Last modified: {lastModified.toLocaleString()}
+            </Text>
+          )}
+        </GridItem>
+        <GridItem pl="2" area={"comments"} maxHeight="100%" overflowY="auto">
+          {chatComponents}
+        </GridItem>
+        <GridItem pl="2" area={"main"} marginTop="1rem">
+          <QuillEditor
+            initialHtmlData={props.documentHtml}
+            onContentChange={handleContentChange}
+            onAddComment={addAiConvo}
+            content={props.content}
+            documentName={documentName}
+          />
+        </GridItem>
+      </Grid>
+    </>
+  );
 }
 
 export interface SelectedText {
-    text: string;
-    top: Number;
-    bottom: Number;
-    left: Number;
-    right: Number;
+  text: string;
+  top: Number;
+  bottom: Number;
+  left: Number;
+  right: Number;
 }

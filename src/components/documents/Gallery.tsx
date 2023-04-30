@@ -9,7 +9,7 @@ import {
   PopoverContent,
   ButtonGroup,
   VStack,
-  ChakraProvider,
+  Input,
   PopoverCloseButton,
   Grid,
 } from "@chakra-ui/react";
@@ -17,6 +17,8 @@ import GalleryNavbar from "./GalleryNavbar";
 import ThumbnailPreview from "./editor/ThumbnailPreview";
 import { IconButton } from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
+import Link from 'next/link'
+
 
 type Document = {
   id: number;
@@ -80,7 +82,7 @@ const ThumbnailPreviewRow = ({
   return documents && Array.isArray(documents) ? (
     <Grid templateColumns="repeat(auto-fit, minmax(190px, 4fr))" gap={4} mt={8} mx={['auto', '8%', '10%', '15%', '25%']}  autoRows="auto">
       {documents.map((document: any, index: number) => (
-        <ThumbnailPreview documentId={document.id} initialHtmlData={document.initialHtmlData} key={index} thumbnail={document.thumbnail} />
+        <ThumbnailPreview documentId={document.id}  key={index} thumbnail={document.thumbnail} />
       ))}
     </Grid>
   ) : null;
@@ -143,7 +145,7 @@ const MyUploader = () => {
   );
 };
 
-export function DocumentManager() {
+export default function DocumentManager() {
   const documentsString = localStorage.getItem("documents");
   const documents = documentsString
     ? JSON.parse(documentsString)
@@ -154,15 +156,31 @@ export function DocumentManager() {
   function handleNewDocumentClick() {
     setIsCreatingNew(true);
   }
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  return (
-    <ChakraProvider>
+  const handleButtonClick = () => {
+    inputRef.current?.click();
+  };
+
+  const handleSelect = (file: any) => {
+    // handle the selected file here
+    console.log(file);
+  };
+
+  const handleSelectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      handleSelect(file);
+    }
+  };
+  const newDocumentId = new Date().getTime();
+
+
+  return <>
       <GalleryNavbar />
-      {isCreatingNew ? (
-        <MyUploader />
-      ) : (
+      
         <ThumbnailPreviewRow documents={documents} />
-      )}
       <AddButton onClick={() => null} />
 
       <Popover placement="top" offset={[0, 20]}>
@@ -179,22 +197,30 @@ export function DocumentManager() {
             borderRadius="full"
           />
         </PopoverTrigger>
-        <PopoverContent height={"150px"} width={"100px"} border={"none"}  boxShadow={'none'}>
-          {/* <PopoverArrow /> */}
+        <PopoverContent height={"120px"} width={"110px"} border={"none"}  boxShadow={'none'} backgroundColor={"transparent"} >
 
-          {/* <PopoverBody> */}
             <ButtonGroup variant="outline" spacing="6" >
             <VStack>
 
-              <Button colorScheme="#10a33f">New Blank</Button>
-              <Button colorScheme="#10a33f">Upload</Button>
+            
+              <Link href={`/files/${encodeURIComponent(newDocumentId)}`}>
+                <Button colorScheme="#10a33f">New Blank</Button>
+
+              </Link>
+              <Box>
+                <Button colorScheme="#10a33f" onClick={handleButtonClick}>Select a file</Button>
+                <Input
+                  type="file"
+                  ref={inputRef as React.LegacyRef<HTMLInputElement>}
+                  display="none"
+                  onChange={handleSelectFile}
+                />
+            </Box>
               </VStack>
             </ButtonGroup>
             
-          {/* </PopoverBody> */}
         </PopoverContent>
       </Popover>
-    </ChakraProvider>
     
-  );
+    </>
 }

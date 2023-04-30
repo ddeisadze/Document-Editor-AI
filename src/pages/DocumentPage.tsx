@@ -1,23 +1,44 @@
-import "react-quill/dist/quill.snow.css";
-import "./DocumentEditor.module.css"
-import { ChakraProvider, extendTheme, useTheme, useToast } from "@chakra-ui/react"
+import "./DocumentEditor.module.css";
+import {
+  ChakraProvider,
+  extendTheme,
+  useTheme,
+  useToast,
+} from "@chakra-ui/react";
 import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
 import ResumeModal from "./ImportResumeDialog";
-import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
+import {
+  getHtmlFromDocFileLegacy,
+  getPdfFileFromHtml,
+} from "../utility/helpers";
 import { useState } from "react";
 import SimpleSidebar from "../components/sidebar/verticalSidebar";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import utf8 from "utf8";
-import { saveAs } from 'file-saver';
-import { Delta } from "quill";
+import { saveAs } from "file-saver";
+import { Delta as DeltaStatic } from "quill";
+import ReactQuill, { Range, Quill } from "react-quill";
 
-export default function DocumentEditorPage() {
+interface documentEditorPageProps {
+  documentName?: string;
+  documentContent?: DeltaStatic;
+}
 
+const Delta = Quill.import("delta");
+
+export default function DocumentEditorPage(props: documentEditorPageProps) {
   const [resumeHtml, setresumeHtml] = useState<string>();
-  const [fileName, setFileName] = useState<string>();
-  const [showUpload, setShowUpload] = useState(true);
+  const [fileName, setFileName] = useState<string>(props?.documentName ?? "");
+  const [showUpload, setShowUpload] = useState(
+    props.documentContent !== undefined
+  );
 
-  const [documentContent, setDocumentContent] = useState<Delta>()
+  console.log(showUpload, "showUpload");
+  console.table(props);
+
+  const [copyOfDelta, setCopyOfDelta] = useState<DeltaStatic>(
+    props.documentContent ?? new Delta()
+  );
 
   const theme = extendTheme({
     styles: {
@@ -40,8 +61,12 @@ export default function DocumentEditorPage() {
     const fileType = file?.type;
 
     if (fileType == "application/pdf") {
-      console.log("pdf")
-    } else if (fileType == "application/msword" || fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      console.log("pdf");
+    } else if (
+      fileType == "application/msword" ||
+      fileType ==
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
       // convert to html use legacy until api is fixed
       getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
         setresumeHtml(html ?? "");
@@ -49,72 +74,82 @@ export default function DocumentEditorPage() {
         setFileName(file.name);
       });
     }
-  }
+  };
 
   const onLoadEditor = (html?: string) => {
-    setFileName("New Resume Document")
+    setFileName("New Resume Document");
     setresumeHtml("");
     setShowUpload(false);
-  }
+  };
 
-  const toast = useToast()
+  const toast = useToast();
 
   return (
     <div className="App">
       <ChakraProvider theme={theme}>
-        {showUpload && <ResumeModal
-          isOpen={false}
-          onClose={() => { }}
-          onFileUpload={onFileUpload}
-          onLoadEditor={onLoadEditor} />}
+        {showUpload && (
+          <ResumeModal
+            isOpen={false}
+            onClose={() => {}}
+            onFileUpload={onFileUpload}
+            onLoadEditor={onLoadEditor}
+          />
+        )}
         {
           <SimpleSidebar
             newDocumentOnClick={() => setShowUpload(true)}
             pdfExportOnClick={() => {
-
-              if (documentContent?.length() ?? 0 < 1) {
+              console.log(copyOfDelta?.ops?.length);
+              if ((copyOfDelta?.ops?.length ?? 0) < 1) {
                 toast({
-                  title: 'Cannot export empty document',
+                  title: "Cannot export empty document",
                   description: `Start loading your resume and editing with our AI!`,
-                  status: 'info',
+                  status: "info",
                   duration: 3000,
                   isClosable: true,
-                })
+                });
 
                 return;
-
               }
 
               toast({
-                title: 'Exporting document to PDF.',
+                title: "Exporting document to PDF.",
                 description: `Your file ${fileName} is exporting`,
-                status: 'loading',
+                status: "loading",
                 duration: 1000,
                 isClosable: true,
-              })
+              });
 
-              const html: string = new QuillDeltaToHtmlConverter(documentContent?.ops ?? [], {
-                inlineStyles: true
-              }).convert();
+              const html: string = new QuillDeltaToHtmlConverter(
+                copyOfDelta?.ops ?? [],
+                {
+                  inlineStyles: true,
+                }
+              ).convert();
 
-              const html_encoded = utf8.encode(html)
+              const html_encoded = utf8.encode(html);
 
-              getPdfFileFromHtml(html_encoded)
-                .then(blob => {
-                  saveAs(blob, `${fileName}.pdf`);
-                  toast({
-                    title: `${fileName}.pdf successfully exported`,
-                    description: "View the file in your downloads.",
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                  })
+              getPdfFileFromHtml(html_encoded).then((blob) => {
+                saveAs(blob, `${fileName}.pdf`);
+                toast({
+                  title: `${fileName}.pdf successfully exported`,
+                  description: "View the file in your downloads.",
+                  status: "success",
+                  duration: 3000,
+                  isClosable: true,
                 });
-            }}>
-            <DocumentEditor onDocumentChangeText={(content) => setDocumentContent(content)} documentHtml={resumeHtml ?? ""} documentName={fileName} />
-          </SimpleSidebar>}
+              });
+            }}
+          >
+            <DocumentEditor
+              onDocumentChangeText={(content) => setCopyOfDelta(content)}
+              content={props.documentContent}
+              documentHtml={resumeHtml ?? ""}
+              documentName={fileName}
+            />
+          </SimpleSidebar>
+        }
       </ChakraProvider>
-
     </div>
   );
 }

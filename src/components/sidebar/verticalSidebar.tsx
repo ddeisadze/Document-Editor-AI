@@ -43,10 +43,10 @@ export default function SimpleSidebar({ children, ...rest }: simpleSidebarProps)
 
     const LinkItems: Array<LinkItemProps> = [
         {
-            name: 'New Document', icon: FiFilePlus, onClick: rest.newDocumentOnClick
+            name: 'New', icon: FiFilePlus, onClick: rest.newDocumentOnClick
         },
         {
-            name: 'Export to PDF', icon: GrDocumentPdf, onClick: rest.pdfExportOnClick
+            name: 'Export', icon: GrDocumentPdf, onClick: rest.pdfExportOnClick
         }
     ];
 
@@ -71,7 +71,7 @@ export default function SimpleSidebar({ children, ...rest }: simpleSidebarProps)
             </Drawer>
             {/* mobilenav */}
             <MobileNav display={{ base: 'flex', md: 'none' }} onOpen={onOpen} />
-            <Box ml={{ base: 0, md: 60 }} p="4">
+            <Box ml={{ base: 0, md: 40 }}>
                 {children}
             </Box>
         </Box>
@@ -90,7 +90,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             bg={useColorModeValue('white', 'gray.900')}
             borderRight="1px"
             borderRightColor={useColorModeValue('gray.200', 'gray.700')}
-            w={{ base: 'full', md: 60 }}
+            w={{ base: 'full', md: 40 }}
             pos="fixed"
             h="full"
             {...rest}>
