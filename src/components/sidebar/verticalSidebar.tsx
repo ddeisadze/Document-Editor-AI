@@ -13,9 +13,10 @@ import {
     useDisclosure,
     BoxProps,
     FlexProps,
+    useToast,
 } from '@chakra-ui/react';
 import {
-    FiSave,
+    FiLogOut,
     FiFilePlus,
     FiMenu,
 } from 'react-icons/fi';
@@ -24,6 +25,7 @@ import {
 } from 'react-icons/gr';
 import { IconType } from 'react-icons';
 import { ReactText } from 'react';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 
 interface LinkItemProps {
     name: string;
@@ -38,17 +40,47 @@ interface simpleSidebarProps {
 }
 
 
-export default function SimpleSidebar({ children, ...rest }: simpleSidebarProps) {
+export default function NavigationBar({ children, ...rest }: simpleSidebarProps) {
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const session = useSession()
+    const supabase = useSupabaseClient()
 
-    const LinkItems: Array<LinkItemProps> = [
+    const toast = useToast();
+
+
+    let LinkItems: Array<LinkItemProps> = [
         {
             name: 'New', icon: FiFilePlus, onClick: rest.newDocumentOnClick
         },
         {
             name: 'Export', icon: GrDocumentPdf, onClick: rest.pdfExportOnClick
-        }
+        },
+
     ];
+
+    if (session) {
+        LinkItems.push({
+            name: 'Logout', icon: FiLogOut, onClick: async () => {
+                const { error } = await supabase.auth.signOut();
+
+                if (error) {
+                    toast({
+                        title: 'Could not logout, try again!',
+                        status: 'error',
+                        duration: 3000,
+                        isClosable: true,
+                    })
+                } else {
+                    toast({
+                        title: 'Logout successful!',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                    })
+                }
+            }
+        })
+    }
 
     return (
         <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>

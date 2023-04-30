@@ -50,10 +50,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
             const commentId = target.getAttribute("commentId");
 
             if (target.tagName.toLowerCase() === "comment-link" && commentId) {
-                console.log("comment", commentId)
                 setAiComments(prevState => prevState.map(p => {
-
-                    console.log(p.id === commentId.trim())
                     if (p.id === commentId.trim()) {
                         p.isOpen = true
                     } else {

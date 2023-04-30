@@ -1,6 +1,7 @@
 .container {
     background-color: #F3F3F3;
     margin: 0;
+    max-width: 8.5in;
 }
 
 .container .ql-editor {
@@ -9,7 +10,8 @@
     background-color: white;
     flex-grow: 1;
     height: auto;
-    /* box-sizing: border-box; */
+    min-height: 11in;
+    box-sizing: border-box;
 }
 
 .container .ql-container.ql-snow {
@@ -17,7 +19,6 @@
     display: flex;
     justify-content: center;
     align-items: stretch;
-    min-height: 1000px;
 }
 
 .container .ql-toolbar.ql-snow {
@@ -29,4 +30,4 @@
     background-color: #F3F3F3;
     border: none;
     box-shadow: 0 0 5px 0 rgba(0, 0, 0, .5);
-} 
+}

@@ -22,7 +22,7 @@ type ModalProps = {
     onLoadEditor: (html?: string) => void
 };
 
-const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
+const NewResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
     const [linkedinAccessCode, setLinkedinAccessCode] = useState<string>();
 
     const { linkedInLogin } = useLinkedIn({
@@ -103,4 +103,4 @@ const ResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
     );
 };
 
-export default ResumeModal;
+export default NewResumeModal;
