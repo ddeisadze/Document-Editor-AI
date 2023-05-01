@@ -1,11 +1,11 @@
-import React, { useReducer, useState, useEffect, ReactElement } from "react";
-import { ChatCompletionRequestMessage } from "openai";
 import {
     Button,
 } from "@chakra-ui/react";
+import { ChatCompletionRequestMessage } from "openai";
+import React, { ReactElement, useEffect, useReducer, useState } from "react";
 import { Range } from "react-quill";
-import CommentDialog, { } from "./CommentDialog";
 import openai from "../../../utility/openai";
+import CommentDialog from "./CommentDialog";
 
 export interface MessageModel {
     message: string,
@@ -70,7 +70,7 @@ export function AiChat(props: {
             myArray: MessageModel[],
             { type, value }: { type: string; value?: MessageModel }
         ): MessageModel[] => {
-            let updatedArr = [];
+            let updatedArr: MessageModel[] = [];
             switch (type) {
                 case "add":
                     if (!value) return myArray;
