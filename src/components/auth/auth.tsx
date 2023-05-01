@@ -31,7 +31,7 @@ export default function AuthLogin({ show = true, ...props }: AuthLoginProps) {
 
     const currentHref = `${origin}${router.asPath}`;
 
-    console.log(props.session)
+    console.log(currentHref)
 
     return <>
         {!props.session?.access_token ? (<Modal isOpen={isOpen} onClose={onClose} >

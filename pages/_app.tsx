@@ -1,10 +1,11 @@
 
-import { ChakraProvider, extendTheme } from '@chakra-ui/react'
-import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import type { AppProps } from 'next/app'
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import type { AppProps } from 'next/app';
 import { useState } from 'react';
-import '../styles/global.css'
+import '../styles/global.css';
+import { MyUserContextProvider } from '../utils/useUser';
 
 export default function App({ Component, pageProps }: AppProps) {
 
@@ -29,9 +30,11 @@ export default function App({ Component, pageProps }: AppProps) {
 
     return (
         <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
-            <ChakraProvider theme={theme}>
-                <Component {...pageProps} />
-            </ChakraProvider>
+            <MyUserContextProvider>
+                <ChakraProvider theme={theme}>
+                    <Component {...pageProps} />
+                </ChakraProvider>
+            </MyUserContextProvider>
         </SessionContextProvider>
     )
 }

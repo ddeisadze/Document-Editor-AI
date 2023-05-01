@@ -22,10 +22,18 @@
     "noImplicitThis": false,
     "incremental": true
   },
+  "paths": {
+    "@/*": [
+      "./*"
+    ]
+  },
   "include": [
     "src",
     "declarations.d.ts",
-    "pages"
+    "pages",
+    "utils",
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules"
