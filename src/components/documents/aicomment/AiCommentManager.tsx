@@ -3,7 +3,7 @@ import {
     Button, ButtonGroup,
     IconButton
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaWindowClose, FaWindowMinimize } from "react-icons/fa";
 import { Range } from "react-quill";
 import DiffViewer from "../diff/DiffViewer";

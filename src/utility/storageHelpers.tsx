@@ -59,7 +59,7 @@ export const updateSpecificDocumentWithComments = (id: string, aiComments: aiCom
 
     const docToUpdate = existingDocuments.findIndex(doc => doc?.id === id)
 
-    if (docToUpdate && aiComments) {
+    if (docToUpdate > -1 && aiComments) {
         existingDocuments[docToUpdate].aiComments = aiComments
     }
 

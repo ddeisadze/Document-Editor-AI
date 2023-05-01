@@ -1,7 +1,7 @@
-import { ReactElement, useEffect, useRef, useState } from 'react';
-import { Box, FormControl, FormLabel, Textarea, Button, Text, Spinner, Grid, GridItem, IconButton, ButtonGroup, Input, InputGroup, InputRightElement } from '@chakra-ui/react';
+import { Box, ButtonGroup, Grid, GridItem, IconButton, Input, InputGroup, InputRightElement, Text } from '@chakra-ui/react';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import { FaRegPaperPlane } from 'react-icons/fa';
 import styles from "./CommentDialog.module.css";
-import { FaRegPaperPlane, FaWindowMaximize, FaWindowMinimize } from 'react-icons/fa';
 
 interface Props {
     onMessageSend: (comment: string) => void;
