@@ -6,8 +6,7 @@ import { GetServerSidePropsContext } from 'next';
 import Link from 'next/link';
 import { ReactNode, useState } from 'react';
 
-import Button from '../../src/pricing-components/ui/Button';
-import LoadingDots from '../../src/pricing-components/ui/LoadingDots';
+import { Button } from '@chakra-ui/react';
 import { postData } from '../../utils/helpers';
 import { useUser } from '../../utils/useUser';
 
@@ -107,7 +106,7 @@ export default function Account({ user }: { user: User }) {
               </p>
               <Button
                 variant="slim"
-                loading={loading}
+                isLoading={loading}
                 disabled={loading || !subscription}
                 onClick={redirectToCustomerPortal}
               >
@@ -119,7 +118,6 @@ export default function Account({ user }: { user: User }) {
           <div className="text-xl mt-8 mb-4 font-semibold">
             {isLoading ? (
               <div className="h-12 mb-6">
-                <LoadingDots />
               </div>
             ) : subscription ? (
               `${subscriptionPrice}/${subscription?.prices?.interval}`
@@ -140,7 +138,6 @@ export default function Account({ user }: { user: User }) {
               }`
             ) : (
               <div className="h-8 mb-6">
-                <LoadingDots />
               </div>
             )}
           </div>

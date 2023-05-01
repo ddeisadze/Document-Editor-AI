@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import Logo from '../../src/pricing-components/icons/Logo';
-import LoadingDots from '../../src/pricing-components/ui/LoadingDots';
 import { getURL } from '../../utils/helpers';
 
 const SignIn = () => {
@@ -52,7 +51,6 @@ const SignIn = () => {
 
   return (
     <div className="m-6">
-      <LoadingDots />
     </div>
   );
 };
