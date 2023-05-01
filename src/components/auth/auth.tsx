@@ -9,7 +9,7 @@ import { Url } from "url"
 
 interface AuthLoginProps {
     children: ReactNode,
-    session: Session,
+    session: Session | null,
     show?: boolean,
     redirectUrl?: Url
 }
@@ -31,8 +31,10 @@ export default function AuthLogin({ show = true, ...props }: AuthLoginProps) {
 
     const currentHref = `${origin}${router.asPath}`;
 
+    console.log(props.session)
+
     return <>
-        {!props.session ? (<Modal isOpen={isOpen} onClose={onClose} >
+        {!props.session?.access_token ? (<Modal isOpen={isOpen} onClose={onClose} >
             <ModalOverlay bg='blackAlpha.300'
                 backdropFilter='blur(8px) hue-rotate(90deg)'
             />

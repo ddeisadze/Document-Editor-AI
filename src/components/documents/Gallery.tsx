@@ -30,7 +30,7 @@ export default function DocumentManager() {
   const session = useSession()
 
   return <>
-    {session && <AuthLogin session={session}>
+    {<AuthLogin session={session}>
 
       <ThumbnailPreviewRow documents={getDocuments()} />
     </AuthLogin>}

@@ -143,7 +143,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
                 })
               });
           }}>
-          {session && <AuthLogin session={session} show={!showUpload}>
+          {<AuthLogin session={session} show={!showUpload}>
             <DocumentEditor
               key={documentId}
               documentId={documentId}
