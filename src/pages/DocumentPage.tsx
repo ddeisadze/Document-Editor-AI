@@ -7,21 +7,38 @@ import NavigationBar from "../components/sidebar/verticalSidebar";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import utf8 from "utf8";
 import { saveAs } from 'file-saver';
-import { Delta } from "quill";
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Delta as DeltaStatic } from "quill";
 import AuthLogin from "../components/auth/auth";
+import ReactQuill, { Range, Quill } from "react-quill";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 
 interface localStorageTempFile {
   fileHtml: string
 }
 
-export default function DocumentEditorPage() {
+interface documentEditorPageProps {
+  documentName?: string;
+  documentContent?: DeltaStatic;
+}
 
+const Delta = Quill.import("delta");
+
+export default function DocumentEditorPage(props: documentEditorPageProps) {
   const [resumeHtml, setresumeHtml] = useState<string>();
-  const [fileName, setFileName] = useState<string>();
-  const [showUpload, setShowUpload] = useState(true);
+  const [fileName, setFileName] = useState<string>(props?.documentName ?? "");
+  const [showUpload, setShowUpload] = useState(
+    props.documentContent !== undefined
+  );
 
-  const [documentContent, setDocumentContent] = useState<Delta>()
+  console.log(showUpload, "showUpload");
+  console.table(props);
+
+  const [copyOfDelta, setCopyOfDelta] = useState<DeltaStatic>(
+    props.documentContent ?? new Delta()
+  );
+
+  const [documentContent, setDocumentContent] = useState<DeltaStatic>()
+
 
   const toast = useToast()
   const session = useSession()
@@ -42,8 +59,12 @@ export default function DocumentEditorPage() {
     const fileType = file?.type;
 
     if (fileType == "application/pdf") {
-      console.log("pdf")
-    } else if (fileType == "application/msword" || fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      console.log("pdf");
+    } else if (
+      fileType == "application/msword" ||
+      fileType ==
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
       // convert to html use legacy until api is fixed
       getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
         setresumeHtml(html ?? "");
@@ -59,13 +80,13 @@ export default function DocumentEditorPage() {
         setFileName(file.name);
       });
     }
-  }
+  };
 
   const onLoadEditor = (html?: string) => {
-    setFileName("New Resume Document")
+    setFileName("New Resume Document");
     setresumeHtml("");
     setShowUpload(false);
-  }
+  };
 
 
   return (
