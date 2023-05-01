@@ -3,7 +3,7 @@ import Quill, { DeltaStatic, Delta as DeltaType, RangeStatic } from "quill";
 import { useCallback, useEffect, useState } from "react";
 import { Range } from "react-quill";
 import { updateSpecificDocumentWithComments } from "../../../utility/storageHelpers";
-import { MessageModel } from "../aicomment/AiComment";
+import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import DocumentTitle from "./DocumentTitle";
 import { QuillEditor } from "./QuillEditor";

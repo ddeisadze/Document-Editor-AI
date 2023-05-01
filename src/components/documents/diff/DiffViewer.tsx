@@ -1,13 +1,12 @@
-import React, { useState, ReactDOM, useRef, useEffect } from 'react';
-import ReactQuill, { Range, Quill } from "react-quill";
+import React, { useEffect, useRef, useState } from 'react';
+import ReactQuill, { Quill } from "react-quill";
 
-import { DeltaStatic, Sources, Delta as DeltaType } from 'quill';
+import { DeltaStatic, Delta as DeltaType } from 'quill';
 
+import { Button, Grid, GridItem, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Stack } from '@chakra-ui/react';
 import { diffLines, diffSentences, diffWords } from 'diff';
-import { Box, Button, Grid, GridItem, HStack, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Stack } from '@chakra-ui/react';
-import CommentDialog, { Message } from '../aicomment/CommentDialog';
-import { AiChat, MessageModel } from '../aicomment/AiComment';
-import 'node_modules/react-quill/dist/quill.snow.css'
+import 'node_modules/react-quill/dist/quill.snow.css';
+import { AiChat, MessageModel } from '../aicomment/AiChat';
 
 interface DiffViewerProps {
     oldText: string;

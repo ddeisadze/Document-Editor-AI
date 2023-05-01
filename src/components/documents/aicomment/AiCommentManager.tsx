@@ -3,11 +3,11 @@ import {
     Button, ButtonGroup,
     IconButton
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaWindowClose, FaWindowMinimize } from "react-icons/fa";
 import { Range } from "react-quill";
 import DiffViewer from "../diff/DiffViewer";
-import { AiChat, MessageModel, returnAiRecs } from "./AiComment";
+import { AiChat, MessageModel, returnAiRecs } from "./AiChat";
 
 export interface aiChatManagerProps {
     isOpen?: boolean;
