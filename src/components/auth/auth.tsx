@@ -5,21 +5,31 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { Session, useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/router'
+import { Url } from "url"
 
 interface AuthLoginProps {
     children: ReactNode,
     session: Session,
-    show: boolean
+    show: boolean,
+    redirectUrl?: Url
 }
-export default function AuthLogin(props: AuthLoginProps) {
+
+export default function AuthLogin({ show = true, ...props }: AuthLoginProps) {
 
     const { isOpen, onOpen, onClose } = useDisclosure({
-        isOpen: props.show
+        isOpen: show
     });
 
     const router = useRouter()
 
     const supabase = useSupabaseClient();
+
+    const origin =
+        typeof window !== 'undefined' && window.location.origin
+            ? window.location.origin
+            : '';
+
+    const currentHref = `${origin}${router.asPath}`;
 
     return <>
         {!props.session ? (<Modal isOpen={isOpen} onClose={onClose} >
@@ -31,8 +41,8 @@ export default function AuthLogin(props: AuthLoginProps) {
                 <ModalBody>
                     <Auth
                         supabaseClient={supabase}
-                        providers={['google', 'linkedin']}
-                        redirectTo={router.asPath}
+                        providers={['google']}
+                        redirectTo={props.redirectUrl?.href ?? currentHref}
                         magicLink={true}
                         appearance={{
                             theme: ThemeSupa,

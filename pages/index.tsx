@@ -6,6 +6,6 @@ const DocumentEditorPage = dynamic(() => import('../src/pages/DocumentPage'), {
 
 export default function App() {
     return (
-        <DocumentEditorPage />
+        <DocumentEditorPage blank />
     );
 }

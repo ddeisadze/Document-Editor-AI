@@ -1,18 +1,16 @@
-import { ChakraProvider } from '@chakra-ui/react';
-import { LinkedInCallback } from 'react-linkedin-login-oauth2';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import DiffViewer from '../components/documents/diff/DiffViewer';
 import { DocumentEditor } from '../components/documents/editor/DocumentEditor';
 import NavigationBar from '../components/sidebar/verticalSidebar';
 import { test_resume_html } from '../utility/sampleData';
-import DocumentEditorPage from './DocumentPage';
+import DocumentPage from './DocumentPage';
 
 export default function TestPage() {
 
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" Component={DocumentEditorPage} />
+                <Route path="/" Component={DocumentPage} />
                 <Route path="/test-editor" element={
                     <NavigationBar>
                         <DocumentEditor documentHtml={test_resume_html} documentName={"Test Resume"} />

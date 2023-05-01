@@ -19,6 +19,7 @@ import {
     FiLogOut,
     FiFilePlus,
     FiMenu,
+    FiHardDrive
 } from 'react-icons/fi';
 import {
     GrDocumentPdf
@@ -26,6 +27,7 @@ import {
 import { IconType } from 'react-icons';
 import { ReactText } from 'react';
 import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useRouter } from 'next/router';
 
 interface LinkItemProps {
     name: string;
@@ -37,26 +39,32 @@ interface simpleSidebarProps {
     children: ReactNode;
     pdfExportOnClick?: () => void;
     newDocumentOnClick?: () => void
+    showExport?: boolean
 }
 
 
-export default function NavigationBar({ children, ...rest }: simpleSidebarProps) {
+export default function NavigationBar({ children, showExport = true, ...rest }: simpleSidebarProps) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const session = useSession()
     const supabase = useSupabaseClient()
 
     const toast = useToast();
-
+    const router = useRouter();
 
     let LinkItems: Array<LinkItemProps> = [
         {
-            name: 'New', icon: FiFilePlus, onClick: rest.newDocumentOnClick
+            name: 'New', icon: FiFilePlus, onClick: () => router.push("/")
         },
         {
-            name: 'Export', icon: GrDocumentPdf, onClick: rest.pdfExportOnClick
-        },
-
+            name: 'My Files', icon: FiHardDrive, onClick: () => router.push("/files")
+        }
     ];
+
+    if (showExport) {
+        LinkItems.push({
+            name: 'Export', icon: GrDocumentPdf, onClick: rest.pdfExportOnClick
+        })
+    }
 
     if (session) {
         LinkItems.push({

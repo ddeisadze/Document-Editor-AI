@@ -1,21 +1,16 @@
-import React from "react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { DeltaStatic } from "quill";
 
 import dynamic from "next/dynamic";
+import { documentStored, getDocuments } from "../../../src/utility/storageHelpers";
 
 const DocumentPage = dynamic(() => import("../../../src/pages/DocumentPage"), {
   ssr: false,
 });
 
-type Props = {
-  params: any;
-};
 
-export default function index({ params }: Props) {
-  const [documents, setDocuments] = useState([]);
-  const [content, setContent] = useState<DeltaStatic | undefined>();
+export default function DocumentPageById() {
+  const [document, setDocument] = useState<documentStored>();
 
   const router = useRouter();
 
@@ -25,31 +20,32 @@ export default function index({ params }: Props) {
 
     const id: string = router.query.id as string;
 
-    const documentsString = localStorage.getItem("documents");
-    const documents = documentsString ? JSON.parse(documentsString) : [];
-    setDocuments(documents);
+    const documents: documentStored[] = getDocuments() ?? []
+
+    console.log(documents)
+
     const existingDocument = documents.find(
-      (document: { id: number }) => document.id.toString() === id
+      (document) => document?.id?.toString() === id
     );
-    console.log(existingDocument);
+
     if (existingDocument) {
-      setContent(existingDocument.content);
+      setDocument(existingDocument);
+
     }
   }, [router.query]);
 
-  // const documentsString = localStorage.getItem("documents");
-  // const documents = documentsString
-  //   ? JSON.parse(documentsString)
-  //   : (null as Array<any> | null);
-
-  // const existingDocument = documents.find((document: any) => document.id === id);
-
-  // console.log(id, existingDocument, "hello", "yoloy");
+  console.log(document)
 
   return (
     <>
-      {content && (
-        <DocumentPage documentContent={content} documentName={"test"} />
+      {document && (
+        <DocumentPage
+          documentId={document.id}
+          documentContent={document.content}
+          documentName={document.documentName}
+          initialHtmlContent={document.initialHtmlData}
+          aiComments={document.aiComments}
+        />
       )}
     </>
   );

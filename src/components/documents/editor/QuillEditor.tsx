@@ -1,188 +1,183 @@
-import React, { useState, useEffect } from "react";
-import ReactQuill, { Range, Quill } from "react-quill";
 import { useOutsideClick } from "@chakra-ui/react";
-import { DeltaStatic, Sources, Delta as DeltaType } from "quill";
-import { SelectedText } from "./DocumentEditor";
 import html2canvas from "html2canvas";
-import InlineToolbar from "./inlineToolbar/InlineToolbar";
-import styles from "./QuillEditor.module.css";
-// import "react-quill/dist/quill.snow.css";
+import { DeltaStatic, Delta as DeltaType } from "quill";
+import React, { useEffect, useState } from "react";
+import ReactQuill, { Quill, Range } from "react-quill";
 import openai from "../../../utility/openai";
+import { documentStored, updateDocuments } from "../../../utility/storageHelpers";
+import { SelectedText } from "./DocumentEditor";
+import styles from "./QuillEditor.module.css";
+import InlineToolbar from "./inlineToolbar/InlineToolbar";
 
-console.log(styles.commentLink);
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
 function getRandomHighlightColor() {
-  const highlightColors = [
-    "#ffff00", // Yellow
-    "#00ff00", // Green
-    "#0000ff", // Blue
-    "#ff00ff", // Pink
-    "#ffA500", // Orange
-    "#ff0000", // Red
-    "#00ffff", // Cyan
-    "#800080", // Purple
-    "#008080", // Teal
-    "#a52a2a", // Brown
-    "#e6e6fa", // Lavender
-    "#90ee90", // Light Green
-    "#add8e6", // Light Blue
-    "#ffb6c1", // Light Pink
-    "#ffffe0", // Light Yellow
-    "#d3d3d3", // Light Gray
-    "#e0ffff", // Light Cyan
-    "#b19cd9", // Light Purple
-    "#cd853f", // Light Brown
-  ];
+    const highlightColors = [
+        "#ffff00", // Yellow
+        "#00ff00", // Green
+        "#0000ff", // Blue
+        "#ff00ff", // Pink
+        "#ffA500", // Orange
+        "#ff0000", // Red
+        "#00ffff", // Cyan
+        "#800080", // Purple
+        "#008080", // Teal
+        "#a52a2a", // Brown
+        "#e6e6fa", // Lavender
+        "#90ee90", // Light Green
+        "#add8e6", // Light Blue
+        "#ffb6c1", // Light Pink
+        "#ffffe0", // Light Yellow
+        "#d3d3d3", // Light Gray
+        "#e0ffff", // Light Cyan
+        "#b19cd9", // Light Purple
+        "#cd853f", // Light Brown
+    ];
 
-  let randomColor;
+    let randomColor;
 
-  // Keep track of colors that have been generated
-  const generatedColors = new Set();
+    // Keep track of colors that have been generated
+    const generatedColors = new Set();
 
-  // Loop until a unique color is generated
-  do {
-    // Generate a random index
-    const randomIndex = Math.floor(Math.random() * highlightColors.length);
+    // Loop until a unique color is generated
+    do {
+        // Generate a random index
+        const randomIndex = Math.floor(Math.random() * highlightColors.length);
 
-    // Get the color at the random index
-    randomColor = highlightColors[randomIndex];
+        // Get the color at the random index
+        randomColor = highlightColors[randomIndex];
 
-    // Check if the generated color is unique
-    if (!generatedColors.has(randomColor)) {
-      // Add the generated color to the set of generated colors
-      generatedColors.add(randomColor);
+        // Check if the generated color is unique
+        if (!generatedColors.has(randomColor)) {
+            // Add the generated color to the set of generated colors
+            generatedColors.add(randomColor);
 
-      // Exit the loop since a unique color has been generated
-      break;
-    }
-  } while (true);
+            // Exit the loop since a unique color has been generated
+            break;
+        }
+    } while (true);
 
-  // Return the unique random color
-  return randomColor;
+    // Return the unique random color
+    return randomColor;
 }
 
 class CommentLinkBlot extends Quill.import("blots/inline") {
-  static blotName = "commentLink";
-  static tagName = "comment-link";
-  static className = styles.commentLink;
+    static blotName = "commentLink";
+    static tagName = "comment-link";
+    static className = styles.commentLink;
 
-  static create(value?: { id: string; color: string }) {
-    let node: HTMLElement = super.create();
+    static create(value?: { id: string; color: string }) {
+        let node: HTMLElement = super.create();
 
-    if (!value) {
-      return node;
+        if (!value) {
+            return node;
+        }
+
+        node.setAttribute("commentId", value.id);
+        node.setAttribute("color", value.color);
+
+        // @ts-ignore
+        node.style = `border-bottom: ${value.color} solid 4px`;
+        // Okay to set other non-format related attributes
+        // These are invisible to Parchment so must be static
+        return node;
     }
 
-    node.setAttribute("commentId", value.id);
-    node.setAttribute("color", value.color);
-
-    // @ts-ignore
-    node.style = `border-bottom: ${value.color} solid 4px`;
-    // Okay to set other non-format related attributes
-    // These are invisible to Parchment so must be static
-    return node;
-  }
-
-  static formats(node: any) {
-    return {
-      id: node.getAttribute("commentId"),
-      color: node.getAttribute("color"),
-    };
-  }
+    static formats(node: any) {
+        return {
+            id: node.getAttribute("commentId"),
+            color: node.getAttribute("color"),
+        };
+    }
 }
 
 Quill.register(CommentLinkBlot);
 
 interface quillEditorProps {
-  onContentChange?: (value: DeltaStatic) => void;
-  onAddComment?: (
-    commentId: string,
-    range: Range,
-    selectedAttrs: SelectedText
-  ) => void;
-  initialHtmlData?: string | null;
-  content?: DeltaStatic;
-  documentName?: string;
+    onContentChange?: (value: DeltaStatic) => void;
+    onAddComment?: (
+        commentId: string,
+        range: Range,
+        selectedAttrs: SelectedText
+    ) => void;
+    initialHtmlData?: string | null;
+    content?: DeltaStatic;
+    documentName?: string;
 }
 const modules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline"],
-    [{ align: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link"],
-  ],
+    toolbar: [
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ["bold", "italic", "underline"],
+        [{ align: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        ["link"],
+    ],
 };
 
 const formats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "background",
-  "align",
-  "list",
-  "bullet",
-  "link",
-  "image",
-  "video",
-  "commentLink",
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "background",
+    "align",
+    "list",
+    "bullet",
+    "link",
+    "image",
+    "video",
+    "commentLink",
 ];
 
 export function QuillEditor(props: quillEditorProps) {
-  const [showInlineToolbar, setShowInlineToolbar] =
-    useState<JSX.Element | null>(null);
-  const quillRef = React.useRef<ReactQuill>(null);
+    const [showInlineToolbar, setShowInlineToolbar] =
+        useState<JSX.Element | null>(null);
+    const quillRef = React.useRef<ReactQuill>(null);
 
-  const toolbarDivRef = React.useRef(null);
+    const toolbarDivRef = React.useRef(null);
 
-  const documentAnalyzers = [];
+    const documentAnalyzers = [];
 
-  console.log(props.content);
+    useEffect(() => { }, []);
 
-  useEffect(() => {}, []);
-
-  useOutsideClick({
-    ref: toolbarDivRef,
-    handler: () => {
-      setShowInlineToolbar(null);
-    },
-  });
-
-  const handleChange = (): void => {
-    if (quillRef.current?.editor && props.onContentChange) {
-      props.onContentChange(quillRef.current.editor.getContents());
-    }
-  };
-
-  const onLaunchAiClicked = (range: Range, selectedAttrs: SelectedText) => {
-    const commentId = new Date().getTime();
-
-    if (range) {
-      const ops = new Delta().retain(range.index).retain(range.length, {
-        commentLink: {
-          id: commentId.toString(),
-          color: getRandomHighlightColor(),
+    useOutsideClick({
+        ref: toolbarDivRef,
+        handler: () => {
+            setShowInlineToolbar(null);
         },
-      });
+    });
 
-      quillRef?.current?.editor?.updateContents(ops);
-    }
+    const handleChange = (): void => {
+        if (quillRef.current?.editor && props.onContentChange) {
+            props.onContentChange(quillRef.current.editor.getContents());
+        }
+    };
 
-    props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
+    const onLaunchAiClicked = (range: Range, selectedAttrs: SelectedText) => {
+        const commentId = new Date().getTime();
 
-    setShowInlineToolbar(null);
-  };
+        if (range) {
+            const ops = new Delta().retain(range.index).retain(range.length, {
+                commentLink: {
+                    id: commentId.toString(),
+                    color: getRandomHighlightColor(),
+                },
+            });
 
-  const onEditSpellingAndGrammer = async () => {
-    const text = quillRef.current?.editor?.getText();
+            quillRef?.current?.editor?.updateContents(ops);
+        }
 
-    console.log("text", text);
+        props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
 
-    const editOpenAiPrompt = `
+        setShowInlineToolbar(null);
+    };
+
+    const onEditSpellingAndGrammer = async () => {
+        const text = quillRef.current?.editor?.getText();
+
+        const editOpenAiPrompt = `
         You are a resume writing assistant. 
         I will pass you text and it is your job to suggest all spelling mistakes.
 
@@ -201,178 +196,117 @@ export function QuillEditor(props: quillEditorProps) {
             """
         `;
 
-    const response = openai
-      .createCompletion({
-        prompt: editOpenAiPrompt,
-        model: "text-davinci-003",
-        max_tokens: 2048,
-      })
-      .then((a) => console.log(a));
-  };
+        const response = openai
+            .createCompletion({
+                prompt: editOpenAiPrompt,
+                model: "text-davinci-003",
+                max_tokens: 2048,
+            })
+            .then((a) => console.log(a));
+    };
 
-  // useEffect(() => {
-  //     if (quillRef.current) {
-  //       const editorNode = quillRef.current.getEditor().root;
-  //       const width = editorNode.clientWidth;
-  //     const height = editorNode.clientHeight / 2;
-  //     html2canvas(editorNode, { width, height }).then(canvas => {
-  //         const dataUrl = canvas.toDataURL();
-  //         localStorage.setItem('thumbnail', dataUrl);
-  //         console.log(dataUrl);
+    useEffect(() => {
+        if (quillRef.current) {
+            const editorNode = quillRef.current.getEditor().root;
+            const width = editorNode.clientWidth;
+            const height = editorNode.clientHeight / 2;
+            html2canvas(editorNode, { width, height }).then((canvas) => {
+                const dataUrl = canvas.toDataURL();
+                const documentName = props.documentName;
 
-  //       });
-  //     }
-  //   }, [props.content]);
+                updateDocuments((document: documentStored) => {
+                    if (document && document.documentName === documentName) {
+                        document.thumbnail = dataUrl;
 
-  // useEffect(() => {
-  //     if (quillRef.current) {
-  //       const editorNode = quillRef.current.getEditor().root;
-  //       const width = editorNode.clientWidth;
-  //       const height = editorNode.clientHeight / 2;
-  //       html2canvas(editorNode, { width, height }).then(canvas => {
-  //         const dataUrl = canvas.toDataURL();
-  //         const documentName = props.documentName;
-  //         const initialHtmlData = props.initialHtmlData;
+                        if (documentName) {
+                            document.documentName = documentName;
 
-  //         let existingDocuments = [];
-  //         const documentsFromLocalStorage = localStorage.getItem('documents');
-  //         if (documentsFromLocalStorage && typeof documentsFromLocalStorage === 'string') {
-  //           existingDocuments = JSON.parse(documentsFromLocalStorage);
-  //         }
+                        }
+                        
+                        document.content = quillRef?.current?.editor?.getContents();
+                    }
 
-  //         const existingDocumentIndex = existingDocuments.findIndex((document: any) => document.documentId === documentId);
-  //         if (existingDocumentIndex !== -1) {
-  //           existingDocuments[existingDocumentIndex].thumbnail = dataUrl;
-  //           existingDocuments[existingDocumentIndex].documentName = documentName;
-  //           existingDocuments[existingDocumentIndex].content = props.content;
-  //           existingDocuments[existingDocumentIndex].initialHtmlData = initialHtmlData;
-  //         } else {
-  //           existingDocuments.push({ content: props.content, documentName: documentName, thumbnail: dataUrl, documentId: documentId, initialHtmlData: initialHtmlData });
-  //         }
-
-  //         localStorage.setItem('documents', JSON.stringify(existingDocuments));
-  //       });
-  //     }
-  //   }, [props.content, props.documentName, props.initialHtmlData]);
-
-  useEffect(() => {
-    if (quillRef.current) {
-      const editorNode = quillRef.current.getEditor().root;
-      const width = editorNode.clientWidth;
-      const height = editorNode.clientHeight / 2;
-      html2canvas(editorNode, { width, height }).then((canvas) => {
-        const dataUrl = canvas.toDataURL();
-        const documentName = props.documentName;
-        const initialHtmlData = props.initialHtmlData;
-
-        let existingDocuments = [];
-        const documentsFromLocalStorage = localStorage.getItem("documents");
-        if (
-          documentsFromLocalStorage &&
-          typeof documentsFromLocalStorage === "string"
-        ) {
-          existingDocuments = JSON.parse(documentsFromLocalStorage);
+                    return document;
+                })
+            });
         }
+    }, [props.content, props.documentName]);
 
-        const existingDocument = existingDocuments.find(
-          (document: any) => document.documentName === documentName
-        );
-        if (existingDocument) {
-          existingDocument.thumbnail = dataUrl;
-          existingDocument.documentName = documentName;
-          existingDocument.content = props.content;
-        } else {
-          const documentId = new Date().getTime();
-          existingDocuments.push({
-            id: documentId,
-            content: props.content,
-            documentName: documentName,
-            thumbnail: dataUrl,
-            documentId: documentId,
-            initialHtmlData: initialHtmlData,
-          });
-        }
+    return (
+        <>
+            <ReactQuill
+                style={{
+                    backgroundColor: "white",
+                }}
+                placeholder="Copy paste resume from Google Drive or any file here...."
+                className={"container"}
+                ref={quillRef}
+                value={props.content ?? props.initialHtmlData ?? ""}
+                onChange={handleChange}
+                modules={modules}
+                formats={formats}
+                onChangeSelection={(range: Range) => {
+                    if (range?.length ?? 0 > 0) {
+                        var text = quillRef.current?.editor?.getText(
+                            range?.index,
+                            range?.length
+                        );
+                        const bounds = quillRef.current?.editor?.getBounds(
+                            range?.index ?? 0
+                        );
 
-        localStorage.setItem("documents", JSON.stringify(existingDocuments));
-      });
-    }
-  }, [props.content, props.documentName]);
+                        const editingArea = quillRef.current
+                            ?.getEditingArea()
+                            .getBoundingClientRect();
 
-  return (
-    <>
-      <ReactQuill
-        style={{
-          backgroundColor: "white",
-        }}
-        placeholder="Copy paste resume from Google Drive or any file here...."
-        className={"container"}
-        ref={quillRef}
-        value={props.content ?? props.initialHtmlData ?? ""}
-        onChange={handleChange}
-        modules={modules}
-        formats={formats}
-        onChangeSelection={(range: Range) => {
-          if (range?.length ?? 0 > 0) {
-            var text = quillRef.current?.editor?.getText(
-              range?.index,
-              range?.length
-            );
-            const bounds = quillRef.current?.editor?.getBounds(
-              range?.index ?? 0
-            );
+                        const scrollLeft =
+                            document.documentElement.scrollLeft || document.body.scrollLeft;
+                        const scrollTop =
+                            document.documentElement.scrollTop || document.body.scrollTop;
 
-            const editingArea = quillRef.current
-              ?.getEditingArea()
-              .getBoundingClientRect();
+                        const windowSelection = window.getSelection();
+                        const windowRange = windowSelection?.getRangeAt(0);
+                        const boundingRect = windowRange?.getBoundingClientRect();
 
-            const scrollLeft =
-              document.documentElement.scrollLeft || document.body.scrollLeft;
-            const scrollTop =
-              document.documentElement.scrollTop || document.body.scrollTop;
+                        const container = windowRange?.commonAncestorContainer;
+                        const selectedElement = container?.parentElement as Element;
+                        const elementStyles = window.getComputedStyle(selectedElement);
+                        const elementLineHeight = parseFloat(elementStyles?.lineHeight);
 
-            const windowSelection = window.getSelection();
-            const windowRange = windowSelection?.getRangeAt(0);
-            const boundingRect = windowRange?.getBoundingClientRect();
+                        const selectedAttrs = {
+                            text: text ?? "",
+                            top: (boundingRect?.top ?? 0) + scrollTop,
+                            bottom: boundingRect?.bottom ?? 0,
+                            right: boundingRect?.right ?? 0,
+                            left: (boundingRect?.left ?? 0) + scrollLeft,
+                        };
 
-            const container = windowRange?.commonAncestorContainer;
-            const selectedElement = container?.parentElement as Element;
-            const elementStyles = window.getComputedStyle(selectedElement);
-            const elementLineHeight = parseFloat(elementStyles?.lineHeight);
+                        const rects = windowRange?.getClientRects();
+                        if (rects && rects.length > 0) {
+                            const rect = rects[0];
+                            const x = rect.left + window.pageXOffset;
 
-            const selectedAttrs = {
-              text: text ?? "",
-              top: (boundingRect?.top ?? 0) + scrollTop,
-              bottom: boundingRect?.bottom ?? 0,
-              right: boundingRect?.right ?? 0,
-              left: (boundingRect?.left ?? 0) + scrollLeft,
-            };
+                            const toolbarComponenet = (
+                                <InlineToolbar
+                                    top={selectedAttrs.top}
+                                    bottom={selectedAttrs.bottom}
+                                    left={x}
+                                    right={selectedAttrs.right}
+                                    lineHeight={elementLineHeight}
+                                    onClickLaunchChat={() =>
+                                        onLaunchAiClicked(range, selectedAttrs)
+                                    }
+                                    onClickCheckGrammer={() => onEditSpellingAndGrammer()}
+                                />
+                            );
 
-            const rects = windowRange?.getClientRects();
-            if (rects && rects.length > 0) {
-              const rect = rects[0];
-              const x = rect.left + window.pageXOffset;
+                            setShowInlineToolbar(toolbarComponenet);
+                        }
+                    }
+                }}
+            />
 
-              const toolbarComponenet = (
-                <InlineToolbar
-                  top={selectedAttrs.top}
-                  bottom={selectedAttrs.bottom}
-                  left={x}
-                  right={selectedAttrs.right}
-                  lineHeight={elementLineHeight}
-                  onClickLaunchChat={() =>
-                    onLaunchAiClicked(range, selectedAttrs)
-                  }
-                  onClickCheckGrammer={() => onEditSpellingAndGrammer()}
-                />
-              );
-
-              setShowInlineToolbar(toolbarComponenet);
-            }
-          }
-        }}
-      />
-
-      <div ref={toolbarDivRef}>{showInlineToolbar}</div>
-    </>
-  );
+            <div ref={toolbarDivRef}>{showInlineToolbar}</div>
+        </>
+    );
 }

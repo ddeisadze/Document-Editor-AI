@@ -19,7 +19,7 @@ type ModalProps = {
     isOpen: boolean;
     onClose: () => void;
     onFileUpload: (file: File) => void;
-    onLoadEditor: (html?: string) => void
+    onCopyPaste: (html?: string) => void
 };
 
 const NewResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => {
@@ -92,7 +92,7 @@ const NewResumeModal: React.FC<ModalProps> = ({ isOpen, onClose, ...props }) => 
                     />
                     <HStack spacing={2}>
                         <Button leftIcon={<Icon as={FaFileUpload} />} onClick={handleUploadResume}>File (.doc, .docx)</Button>
-                        <Button leftIcon={<Icon as={FaClipboard} />} onClick={() => props.onLoadEditor()}>Copy and Paste</Button>
+                        <Button leftIcon={<Icon as={FaClipboard} />} onClick={() => props.onCopyPaste()}>Copy and Paste</Button>
 
                     </HStack>
                 </ModalBody>

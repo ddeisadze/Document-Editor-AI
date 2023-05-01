@@ -1,11 +1,10 @@
 
-import dynamic from 'next/dynamic'
-import { Auth } from '@supabase/auth-ui-react'
-import { Typography, Button } from "@supabase/ui";
+import { Auth } from '@supabase/auth-ui-react';
+import { Button, Typography } from "@supabase/ui";
 
-import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
-import { Box, Center } from '@chakra-ui/react'
+import { Box, Center } from '@chakra-ui/react';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 const Container = (props: any) => {
     const { user } = Auth.useUser();
@@ -53,10 +52,6 @@ const Home = () => {
 
     )
 }
-
-const DocumentEditor = dynamic(() => import('../../src/components/documents/editor/DocumentEditor').then(module => module.DocumentEditor), {
-    ssr: false,
-})
 
 export default function App() {
     return (

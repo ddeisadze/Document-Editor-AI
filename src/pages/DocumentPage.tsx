@@ -1,58 +1,40 @@
-import { ChakraProvider, extendTheme, useTheme, useToast } from "@chakra-ui/react"
-import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
-import NewResumeModal from "./ImportResumeDialog";
-import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
-import { useEffect, useState } from "react";
-import NavigationBar from "../components/sidebar/verticalSidebar";
-import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
-import utf8 from "utf8";
+import { useToast } from "@chakra-ui/react";
+import { useSession } from "@supabase/auth-helpers-react";
 import { saveAs } from 'file-saver';
+import { useRouter } from "next/router";
 import { Delta as DeltaStatic } from "quill";
+import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
+import { useState } from "react";
+import utf8 from "utf8";
 import AuthLogin from "../components/auth/auth";
-import ReactQuill, { Range, Quill } from "react-quill";
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { DocumentEditor, aiCommentState } from "../components/documents/editor/DocumentEditor";
+import NavigationBar from "../components/sidebar/verticalSidebar";
+import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
+import { createNewDocument, getDocument } from "../utility/storageHelpers";
+import NewResumeModal from "./ImportResumeDialog";
 
-interface localStorageTempFile {
-  fileHtml: string
-}
 
 interface documentEditorPageProps {
   documentName?: string;
   documentContent?: DeltaStatic;
+  documentId: string;
+  aiComments?: aiCommentState[];
+  initialHtmlContent?: string
+  blank?: boolean
 }
 
-const Delta = Quill.import("delta");
+export default function DocumentPage(props: documentEditorPageProps) {
 
-export default function DocumentEditorPage(props: documentEditorPageProps) {
-  const [resumeHtml, setresumeHtml] = useState<string>();
-  const [fileName, setFileName] = useState<string>(props?.documentName ?? "");
+  const [resumeHtml, setresumeHtml] = useState<string | undefined>(props.initialHtmlContent);
   const [showUpload, setShowUpload] = useState(
-    props.documentContent !== undefined
+    props.blank
   );
 
-  console.log(showUpload, "showUpload");
-  console.table(props);
-
-  const [copyOfDelta, setCopyOfDelta] = useState<DeltaStatic>(
-    props.documentContent ?? new Delta()
-  );
-
-  const [documentContent, setDocumentContent] = useState<DeltaStatic>()
-
+  const [documentId, setDocumentId] = useState<string>(props.documentId)
 
   const toast = useToast()
   const session = useSession()
-  const supabase = useSupabaseClient()
-
-  useEffect(() => {
-    const uploadedFileHtml = localStorage.getItem("uploadedFileHtml");
-    if (session && uploadedFileHtml) {
-      const parsedUploadtedFile: localStorageTempFile = JSON.parse(uploadedFileHtml);
-      setresumeHtml(parsedUploadtedFile.fileHtml)
-      setShowUpload(false)
-      localStorage.removeItem("uploadedFileHtml")
-    }
-  }, [])
+  const router = useRouter();
 
 
   const onFileUpload = async (file: File) => {
@@ -68,24 +50,41 @@ export default function DocumentEditorPage(props: documentEditorPageProps) {
       // convert to html use legacy until api is fixed
       getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
         setresumeHtml(html ?? "");
+        const docId = new Date().getTime().toString();
 
-        if (!session && html) {
-          const storageValue: localStorageTempFile = {
-            fileHtml: html
-          }
-          localStorage.setItem("uploadedFileHtml", JSON.stringify(storageValue))
+        if (html) {
+          createNewDocument({
+            documentName: file.name,
+            id: docId,
+            initialHtmlData: html
+          })
+
+
+        } else {
+          toast({
+            title: 'Error converting file to html. ',
+            description: `Try copy/paste.`,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          })
         }
 
-        setShowUpload(false);
-        setFileName(file.name);
+        router.push(`/files/${encodeURIComponent(docId)}`)
       });
     }
   };
 
   const onLoadEditor = (html?: string) => {
-    setFileName("New Resume Document");
-    setresumeHtml("");
-    setShowUpload(false);
+    const docId = new Date().getTime().toString();
+
+    createNewDocument({
+      documentName: `Untitled Resume - ${docId}`,
+      id: docId,
+      initialHtmlData: html
+    })
+
+    router.push(`/files/${encodeURIComponent(docId)}`)
   };
 
 
@@ -95,13 +94,17 @@ export default function DocumentEditorPage(props: documentEditorPageProps) {
         isOpen={true}
         onClose={() => { }}
         onFileUpload={onFileUpload}
-        onLoadEditor={onLoadEditor} />}
+        onCopyPaste={onLoadEditor} />}
       {
         <NavigationBar
           newDocumentOnClick={() => setShowUpload(true)}
           pdfExportOnClick={() => {
 
-            if (documentContent?.length() ?? 0 < 1) {
+            const documentDelta = getDocument(documentId)?.content;
+
+            console.log((documentDelta?.ops?.length ?? 0) < 1, "del")
+
+            if ((documentDelta?.ops?.length ?? 0) < 1) {
               toast({
                 title: 'Cannot export empty document',
                 description: `Start loading your resume and editing with our AI!`,
@@ -116,13 +119,13 @@ export default function DocumentEditorPage(props: documentEditorPageProps) {
 
             toast({
               title: 'Exporting document to PDF.',
-              description: `Your file ${fileName} is exporting`,
+              description: `Your file ${props.documentName} is exporting`,
               status: 'loading',
               duration: 1000,
               isClosable: true,
             })
 
-            const html: string = new QuillDeltaToHtmlConverter(documentContent?.ops ?? [], {
+            const html: string = new QuillDeltaToHtmlConverter(documentDelta?.ops ?? [], {
               inlineStyles: true
             }).convert();
 
@@ -130,9 +133,9 @@ export default function DocumentEditorPage(props: documentEditorPageProps) {
 
             getPdfFileFromHtml(html_encoded)
               .then(blob => {
-                saveAs(blob, `${fileName}.pdf`);
+                saveAs(blob, `${props.documentName}.pdf`);
                 toast({
-                  title: `${fileName}.pdf successfully exported`,
+                  title: `${props.documentName}.pdf successfully exported`,
                   description: "View the file in your downloads.",
                   status: 'success',
                   duration: 3000,
@@ -141,7 +144,14 @@ export default function DocumentEditorPage(props: documentEditorPageProps) {
               });
           }}>
           <AuthLogin session={session} show={!showUpload}>
-            <DocumentEditor onDocumentChangeText={(content) => setDocumentContent(content)} documentHtml={resumeHtml ?? ""} documentName={fileName} />
+            <DocumentEditor
+              key={documentId}
+              documentId={documentId}
+              initialDeltaStaticContent={props.documentContent}
+              documentHtml={resumeHtml}
+              documentName={props.documentName}
+              aiComments={props.aiComments}
+            />
           </AuthLogin>
         </NavigationBar>}
     </div>

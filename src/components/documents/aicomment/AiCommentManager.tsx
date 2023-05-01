@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import {
-    IconButton,
-    Button, ButtonGroup
-} from "@chakra-ui/react";
 import { ChatIcon } from "@chakra-ui/icons";
-import DiffViewer from "../diff/DiffViewer";
-import { FaWindowMaximize, FaWindowMinimize, FaWindowClose } from "react-icons/fa";
-import { MessageModel, AiChat, returnAiRecs } from "./AiComment";
+import {
+    Button, ButtonGroup,
+    IconButton
+} from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { FaWindowClose, FaWindowMinimize } from "react-icons/fa";
 import { Range } from "react-quill";
+import DiffViewer from "../diff/DiffViewer";
+import { AiChat, MessageModel, returnAiRecs } from "./AiComment";
 
 export interface aiChatManagerProps {
     isOpen?: boolean;
@@ -21,22 +21,29 @@ export interface aiChatManagerProps {
 
     handleUpdatePrompt?: (updatedText: string, range?: Range) => void | undefined;
     onRemoveComponent: () => void;
+    onNewMessage?: (messageHistory: MessageModel[]) => void
 
     onOpenConvo?: () => void;
     onCloseConvo?: () => void;
 
     commentId: string;
+
+    messageHistory?: MessageModel[]
 }
 
 export function AiCommentManager(props: aiChatManagerProps) {
     const [isOpen, setIsOpen] = useState<boolean | undefined>(props.isOpen);
     const [isDiffOpen, setIsDiffOpen] = useState<boolean>(false);
 
-    const [aiMessages, setAiMessages] = useState<MessageModel[]>([]);
+    const [aiMessages, setAiMessages] = useState<MessageModel[]>(props.messageHistory ?? []);
 
     const onNewMessageFromChild = (messages: MessageModel[]) => {
         setAiMessages(messages);
     };
+
+    useEffect(() => {
+        props.onNewMessage?.call({}, aiMessages)
+    }, [aiMessages])
 
     useEffect(() => {
         setIsOpen(props.isOpen);
