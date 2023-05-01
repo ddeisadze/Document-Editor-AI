@@ -1,10 +1,10 @@
 import {
   Grid,
 } from "@chakra-ui/react";
-import ThumbnailPreview from "./editor/ThumbnailPreview";
+import { useSession } from "@supabase/auth-helpers-react";
 import { documentStored, getDocuments } from "../../utility/storageHelpers";
 import AuthLogin from "../auth/auth";
-import { useSession } from "@supabase/auth-helpers-react";
+import ThumbnailPreview from "./editor/ThumbnailPreview";
 
 const ThumbnailPreviewRow = ({
   documents,
@@ -30,9 +30,9 @@ export default function DocumentManager() {
   const session = useSession()
 
   return <>
-    <AuthLogin session={session}>
+    {session && <AuthLogin session={session}>
 
       <ThumbnailPreviewRow documents={getDocuments()} />
-    </AuthLogin>
+    </AuthLogin>}
   </>
 }

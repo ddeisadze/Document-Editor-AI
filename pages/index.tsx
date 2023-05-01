@@ -1,4 +1,4 @@
-import dynamic from 'next/dynamic'
+import dynamic from 'next/dynamic';
 
 const DocumentEditorPage = dynamic(() => import('../src/pages/DocumentPage'), {
     ssr: false,
@@ -6,6 +6,6 @@ const DocumentEditorPage = dynamic(() => import('../src/pages/DocumentPage'), {
 
 export default function App() {
     return (
-        <DocumentEditorPage blank />
+        <DocumentEditorPage documentId='test' blank />
     );
 }

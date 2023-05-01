@@ -32,7 +32,7 @@ interface DocumentEditorProps {
     documentId: string,
     aiComments?: aiCommentState[],
     isDemoView?: boolean;
-    initialDeltaStaticContent: DeltaStatic | undefined;
+    initialDeltaStaticContent?: DeltaStatic | undefined;
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {

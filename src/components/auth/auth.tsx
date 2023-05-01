@@ -1,16 +1,16 @@
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure } from "@chakra-ui/react"
-import { ReactNode } from "react"
 import { Auth } from '@supabase/auth-ui-react'
+import { ReactNode } from "react"
 
+import { Session, useSupabaseClient } from '@supabase/auth-helpers-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { Session, useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/router'
 import { Url } from "url"
 
 interface AuthLoginProps {
     children: ReactNode,
     session: Session,
-    show: boolean,
+    show?: boolean,
     redirectUrl?: Url
 }
 

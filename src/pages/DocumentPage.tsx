@@ -143,7 +143,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
                 })
               });
           }}>
-          <AuthLogin session={session} show={!showUpload}>
+          {session && <AuthLogin session={session} show={!showUpload}>
             <DocumentEditor
               key={documentId}
               documentId={documentId}
@@ -152,7 +152,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
               documentName={props.documentName}
               aiComments={props.aiComments}
             />
-          </AuthLogin>
+          </AuthLogin>}
         </NavigationBar>}
     </div>
   );
