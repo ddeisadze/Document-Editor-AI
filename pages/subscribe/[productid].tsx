@@ -26,6 +26,8 @@ export default function FeeSubscriptionPlan({ product }: Props) {
     const handleCheckout = async (price: Price) => {
         setPriceIdLoading(price.id);
 
+        console.log(user, subscription)
+
         if (!user) {
             return router.push({
                 pathname: '/auth/signin',
