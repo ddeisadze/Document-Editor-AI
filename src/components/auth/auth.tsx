@@ -34,7 +34,7 @@ export default function AuthLogin({ show = true, ...props }: AuthLoginProps) {
 
     const { user, subscription } = useUser();
 
-    // console.log(user, subscription)
+    console.log(user, subscription)
 
     return <>
         {!user ? (<Modal isOpen={isOpen} onClose={onClose} >
