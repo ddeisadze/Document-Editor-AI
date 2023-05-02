@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function PricingPage({ products }: Props) {
-  console.log("Asdasd")
+  console.log(products)
 
   return <Pricing products={products} />;
 }

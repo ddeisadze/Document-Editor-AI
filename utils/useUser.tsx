@@ -44,8 +44,7 @@ export const MyUserContextProvider = (props: Props) => {
       .single();
 
   useEffect(() => {
-    if (user && !isLoadingData && !userDetails && !subscription) {
-      setIsloadingData(true);
+    if (!isLoadingUser) {
       Promise.allSettled([getUserDetails(), getSubscription()]).then(
         (results) => {
           const userDetailsPromise = results[0];
@@ -58,13 +57,37 @@ export const MyUserContextProvider = (props: Props) => {
             setSubscription(subscriptionPromise.value.data as Subscription);
 
           setIsloadingData(false);
-        }
-      );
-    } else if (!user && !isLoadingUser && !isLoadingData) {
-      setUserDetails(null);
-      setSubscription(null);
+        })
+    } else {
+      setIsloadingData(true)
     }
-  }, [user, isLoadingUser]);
+  }, [isLoadingUser])
+
+  // useEffect(() => {
+  //   if (user && !isLoadingData && !userDetails && !subscription) {
+  //     setIsloadingData(true);
+
+  //     Promise.allSettled([getUserDetails(), getSubscription()]).then(
+  //       (results) => {
+  //         const userDetailsPromise = results[0];
+  //         const subscriptionPromise = results[1];
+
+  //         if (userDetailsPromise.status === 'fulfilled')
+  //           setUserDetails(userDetailsPromise.value.data as UserDetails);
+
+  //         if (subscriptionPromise.status === 'fulfilled')
+  //           setSubscription(subscriptionPromise.value.data as Subscription);
+
+  //         setIsloadingData(false);
+  //       }
+  //     );
+  //   } else if (!user && !isLoadingUser && !isLoadingData) {
+  //     setUserDetails(null);
+  //     setSubscription(null);
+  //   }
+  // }, [user, isLoadingUser]);
+
+  console.log("---->", isLoadingUser, "user", isLoadingData, "data")
 
   const value = {
     accessToken,

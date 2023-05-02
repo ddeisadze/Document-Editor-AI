@@ -20,6 +20,8 @@ const CreateCheckoutSession: NextApiHandler = async (req, res) => {
         email: user?.email || ''
       });
 
+      console.log("customer", customer)
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         billing_address_collection: 'required',
@@ -40,9 +42,10 @@ const CreateCheckoutSession: NextApiHandler = async (req, res) => {
         cancel_url: `${getURL()}/`
       });
 
+      console.log("session", session)
+
       return res.status(200).json({ sessionId: session.id });
     } catch (err: any) {
-      console.log(err);
       res
         .status(500)
         .json({ error: { statusCode: 500, message: err.message } });

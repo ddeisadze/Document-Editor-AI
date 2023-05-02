@@ -1,33 +1,34 @@
-import React, { ReactNode } from 'react';
 import {
-    IconButton,
     Box,
+    BoxProps,
     CloseButton,
-    Flex,
-    Icon,
-    useColorModeValue,
-    Link,
     Drawer,
     DrawerContent,
-    Text,
-    useDisclosure,
-    BoxProps,
+    Flex,
     FlexProps,
+    Icon,
+    IconButton,
+    Link,
+    Text,
+    useColorModeValue,
+    useDisclosure,
     useToast,
 } from '@chakra-ui/react';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useRouter } from 'next/router';
+import { ReactNode, ReactText } from 'react';
+import { IconType } from 'react-icons';
 import {
-    FiLogOut,
     FiFilePlus,
-    FiMenu,
-    FiHardDrive
+    FiHardDrive,
+    FiLogOut,
+    FiMenu
 } from 'react-icons/fi';
 import {
     GrDocumentPdf
 } from 'react-icons/gr';
-import { IconType } from 'react-icons';
-import { ReactText } from 'react';
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
+import { VscAccount } from 'react-icons/vsc';
+import { postData } from '../../../utils/helpers';
 
 interface LinkItemProps {
     name: string;
@@ -87,7 +88,19 @@ export default function NavigationBar({ children, showExport = true, ...rest }: 
                     })
                 }
             }
-        })
+        },
+            {
+                name: 'My Account', icon: VscAccount, onClick: async () => {
+                    try {
+                        const { url, error } = await postData({
+                            url: '/api/create-portal-link'
+                        });
+                        window.location.assign(url);
+                    } catch (error) {
+                        if (error) return alert((error as Error).message);
+                    }
+                }
+            })
     }
 
     return (

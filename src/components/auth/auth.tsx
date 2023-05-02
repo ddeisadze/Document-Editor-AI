@@ -6,6 +6,7 @@ import { Session, useSupabaseClient } from '@supabase/auth-helpers-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { useRouter } from 'next/router'
 import { Url } from "url"
+import { useUser } from "../../../utils/useUser"
 
 interface AuthLoginProps {
     children: ReactNode,
@@ -31,10 +32,12 @@ export default function AuthLogin({ show = true, ...props }: AuthLoginProps) {
 
     const currentHref = `${origin}${router.asPath}`;
 
-    console.log(currentHref)
+    const { user, subscription } = useUser();
+
+    // console.log(user, subscription)
 
     return <>
-        {!props.session?.access_token ? (<Modal isOpen={isOpen} onClose={onClose} >
+        {!user ? (<Modal isOpen={isOpen} onClose={onClose} >
             <ModalOverlay bg='blackAlpha.300'
                 backdropFilter='blur(8px) hue-rotate(90deg)'
             />
