@@ -27,7 +27,7 @@ export default function Pricing({ products }: Props) {
       return router.push('price-test/signin');
     }
     if (subscription) {
-      return router.push('/account');
+      return router.push('/');
     }
 
     try {

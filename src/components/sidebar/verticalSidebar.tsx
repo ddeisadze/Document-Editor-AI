@@ -97,7 +97,7 @@ export default function NavigationBar({ children, showExport = true, ...rest }: 
                         });
                         window.location.assign(url);
                     } catch (error) {
-                        if (error) return alert((error as Error).message);
+                        if (error) return alert();
                     }
                 }
             })
