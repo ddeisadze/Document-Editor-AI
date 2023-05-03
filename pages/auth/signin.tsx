@@ -16,15 +16,15 @@ const SignIn = () => {
   const greyColor = useColorModeValue('gray.50', 'gray.800');
   const whiteColor = useColorModeValue('white', 'gray.700');
 
-
+  console.log(user.user)
 
   useEffect(() => {
-    if (user) {
+    if (user.user) {
       router.replace('/');
     }
   }, [user]);
 
-  if (!user)
+  if (!user.user)
     return (
       <Flex
         minH={'100vh'}

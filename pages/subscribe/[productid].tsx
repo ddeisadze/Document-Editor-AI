@@ -22,6 +22,7 @@ export default function FeeSubscriptionPlan({ product }: Props) {
     const [priceIdLoading, setPriceIdLoading] = useState<string>();
     const { user, isLoading, subscription } = useUser();
 
+    console.log(user);
 
     const handleCheckout = async (price: Price) => {
         setPriceIdLoading(price.id);
