@@ -3,6 +3,7 @@ import html2canvas from "html2canvas";
 import { DeltaStatic, Delta as DeltaType } from "quill";
 import React, { useEffect, useState } from "react";
 import ReactQuill, { Quill, Range } from "react-quill";
+import { useReadonly } from "../../../contexts";
 import openai from "../../../utility/openai";
 import { documentStored, updateDocuments } from "../../../utility/storageHelpers";
 import { SelectedText } from "./DocumentEditor";
@@ -140,14 +141,14 @@ export function QuillEditor(props: quillEditorProps) {
 
     const documentAnalyzers = [];
 
-    useEffect(() => { }, []);
-
     useOutsideClick({
         ref: toolbarDivRef,
         handler: () => {
             setShowInlineToolbar(null);
         },
     });
+
+    const readonlyContext = useReadonly();
 
     const handleChange = (): void => {
         if (quillRef.current?.editor && props.onContentChange) {
@@ -222,7 +223,7 @@ export function QuillEditor(props: quillEditorProps) {
                             document.documentName = documentName;
 
                         }
-                        
+
                         document.content = quillRef?.current?.editor?.getContents();
                     }
 
@@ -231,6 +232,7 @@ export function QuillEditor(props: quillEditorProps) {
             });
         }
     }, [props.content, props.documentName]);
+
 
     return (
         <>
@@ -245,7 +247,7 @@ export function QuillEditor(props: quillEditorProps) {
                 onChange={handleChange}
                 modules={modules}
                 formats={formats}
-                onChangeSelection={(range: Range) => {
+                onChangeSelection={readonlyContext?.readonly ? () => { } : (range: Range) => {
                     if (range?.length ?? 0 > 0) {
                         var text = quillRef.current?.editor?.getText(
                             range?.index,

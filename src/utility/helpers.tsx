@@ -43,6 +43,7 @@ function getHtmlFromFileApi(fileBlob: Blob) {
 }
 
 export async function getPdfFileFromHtml(htmlString: string): Promise<Blob> {
+	console.log(htmlString)
 	const blob = await fetch('https://aidox-pdf.onrender.com/pdf', {
 		method: 'POST',
 		headers: {

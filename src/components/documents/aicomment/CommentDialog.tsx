@@ -1,6 +1,7 @@
 import { Box, ButtonGroup, Grid, GridItem, IconButton, Input, InputGroup, InputRightElement, Text } from '@chakra-ui/react';
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FaRegPaperPlane } from 'react-icons/fa';
+import { useReadonly } from '../../../contexts';
 import styles from "./CommentDialog.module.css";
 
 interface Props {
@@ -42,6 +43,8 @@ const WaveSpinner: React.FC<WaveSpinnerProps> = ({ color, size }) => {
 const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = [], ...props }: Props) => {
     const [comment, setComment] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const readonlyContext = useReadonly();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setComment(event.target.value);
@@ -148,12 +151,14 @@ const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = []
                     <Input
                         fontSize={"sm"}
                         value={comment}
+                        isDisabled={readonlyContext.readonly}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         placeholder="Ask our AI to help..."
                     />
                     <InputRightElement children={<IconButton
                         size='sm'
+                        isDisabled={readonlyContext.readonly}
                         aria-label='Send message'
                         color={"blue.300"}
                         icon={<FaRegPaperPlane id="inlineToolbar" />}

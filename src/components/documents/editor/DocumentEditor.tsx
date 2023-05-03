@@ -1,7 +1,8 @@
 import { Grid, GridItem, Text } from "@chakra-ui/react";
-import Quill, { DeltaStatic, Delta as DeltaType, RangeStatic } from "quill";
+import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 import { useCallback, useEffect, useState } from "react";
 import { Range } from "react-quill";
+import { useReadonly } from "../../../contexts";
 import { updateSpecificDocumentWithComments } from "../../../utility/storageHelpers";
 import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
@@ -45,12 +46,15 @@ export function DocumentEditor(props: DocumentEditorProps) {
     const [lastModified, setLastModified] = useState<Date>();
     const [content, setContent] = useState<DeltaStatic>();
 
+    const readonlyContext = useReadonly();
+
     useEffect(() => {
         updateSpecificDocumentWithComments(props.documentId, aiComments);
     }, [aiComments])
 
     useEffect(() => {
         if (props.initialDeltaStaticContent) {
+            console.log(props.initialDeltaStaticContent, "ssss")
             setContent(props.initialDeltaStaticContent)
         }
     }, [props.initialDeltaStaticContent])
@@ -74,42 +78,19 @@ export function DocumentEditor(props: DocumentEditorProps) {
             }
         });
 
-        if (props.isDemoView) {
-            const commentId = "test";
-            const range: RangeStatic = {
-                index: 0,
-                length: 40,
-            };
+        if (readonlyContext.showComments) {
+            setAiComments(prevState => prevState.map((p, i) => {
+                if (i == 0) {
+                    p.isOpen = true
+                } else {
+                    p.isOpen = false;
+                }
 
-            // const demoComp = <AiChatManagerDocument
-            //     componentKey={commentId}
-            //     width={commentWidth}
-            //     range={range}
-            //     handleUpdatePrompt={handleOnAiUpdatedPrompt}
-            //     onRemoveComponent={() => removeAiConvo(commentId, range)}
-            //     selectedText={"Text"}
-            //     openConvoKey={openCommentId}
-            //     setOpenConvoKey={setOpenCommentId}
-            //     onOpenDiffView={() => { }}
-            // />;
-
-            // setAiConversationsChildren([
-            //     {
-            //         id: commentId,
-            //         range: range,
-            //         component: (
-            //             demoComp
-            //         ),
-            //     },
-            //     {
-            //         id: commentId,
-            //         range: range,
-            //         component: (
-            //             demoComp
-            //         ),
-            //     }
-            // ]);
+                return p;
+            })
+            );
         }
+
     }, []);
 
     const removeAiConvo = (key: string, range: Range) => {
