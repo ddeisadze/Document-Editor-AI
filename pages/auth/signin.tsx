@@ -16,8 +16,6 @@ const SignIn = () => {
   const greyColor = useColorModeValue('gray.50', 'gray.800');
   const whiteColor = useColorModeValue('white', 'gray.700');
 
-  console.log(user.user)
-
   useEffect(() => {
     if (user.user) {
       router.replace('/');

@@ -2,6 +2,7 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import { Analytics } from '@vercel/analytics/react';
 import type { AppProps } from 'next/app';
 import { useState } from 'react';
 import '../styles/global.css';
@@ -28,7 +29,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     const [supabase] = useState(() => createBrowserSupabaseClient())
 
-    return (
+    return <>
         <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
             <MyUserContextProvider>
                 <ChakraProvider theme={theme}>
@@ -36,5 +37,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 </ChakraProvider>
             </MyUserContextProvider>
         </SessionContextProvider>
-    )
+        <Analytics />
+    </>
+
 }

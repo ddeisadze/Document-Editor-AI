@@ -25,6 +25,9 @@ import {
     FiMenu
 } from 'react-icons/fi';
 import {
+    GiArrowScope
+} from 'react-icons/gi';
+import {
     GrDocumentPdf
 } from 'react-icons/gr';
 import { VscAccount } from 'react-icons/vsc';
@@ -68,27 +71,31 @@ export default function NavigationBar({ children, showExport = true, ...rest }: 
     }
 
     if (session) {
-        LinkItems.push({
-            name: 'Logout', icon: FiLogOut, onClick: async () => {
-                const { error } = await supabase.auth.signOut();
+        LinkItems.push(
+            {
+                name: 'Automated Application', icon: GiArrowScope, onClick: () => router.push("/automation"),
+            },
+            {
+                name: 'Logout', icon: FiLogOut, onClick: async () => {
+                    const { error } = await supabase.auth.signOut();
 
-                if (error) {
-                    toast({
-                        title: 'Could not logout, try again!',
-                        status: 'error',
-                        duration: 3000,
-                        isClosable: true,
-                    })
-                } else {
-                    toast({
-                        title: 'Logout successful!',
-                        status: 'success',
-                        duration: 3000,
-                        isClosable: true,
-                    })
+                    if (error) {
+                        toast({
+                            title: 'Could not logout, try again!',
+                            status: 'error',
+                            duration: 3000,
+                            isClosable: true,
+                        })
+                    } else {
+                        toast({
+                            title: 'Logout successful!',
+                            status: 'success',
+                            duration: 3000,
+                            isClosable: true,
+                        })
+                    }
                 }
-            }
-        },
+            },
             {
                 name: 'My Account', icon: VscAccount, onClick: async () => {
                     try {

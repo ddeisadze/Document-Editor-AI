@@ -1,4 +1,5 @@
 import { Delta as DeltaStatic } from "quill";
+import { Batch } from "../components/automation/batchesDisplay";
 import { aiCommentState } from "../components/documents/editor/DocumentEditor";
 
 interface createNewDocument {
@@ -35,6 +36,7 @@ export const createNewDocument = (doc: createNewDocument) => {
 }
 
 export const getDocuments = (): documentStored[] => {
+    console.log(localStorage)
     const documentsString = localStorage.getItem("documents");
     const documents: documentStored[] = documentsString
         ? JSON.parse(documentsString)
@@ -64,4 +66,13 @@ export const updateSpecificDocumentWithComments = (id: string, aiComments: aiCom
     }
 
     localStorage.setItem("documents", JSON.stringify(existingDocuments));
+}
+
+export const setBatchesLocalStorage = (batches: Batch[]) => {
+    localStorage.setItem("batches", JSON.stringify(batches))
+}
+
+export const getBatches: () => Batch[] = () => {
+    const batchString = localStorage.getItem("batches")
+    return batchString ? JSON.parse(batchString) as Batch[] : []
 }
