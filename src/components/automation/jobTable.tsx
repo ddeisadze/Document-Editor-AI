@@ -12,8 +12,7 @@ import {
     Td,
     Th,
     Thead,
-    Tr,
-    useColorModeValue
+    Tr
 } from "@chakra-ui/react";
 import { useState } from "react";
 
@@ -81,9 +80,7 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                                         <EditablePreview py={2}
                                             fontStyle={'italic'}
                                             px={4}
-                                            _hover={{
-                                                background: useColorModeValue("gray.100", "gray.700")
-                                            }} />
+                                        />
                                         <EditableInput />
                                     </Editable>
                                 </Td>
@@ -97,9 +94,7 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                                         <EditablePreview py={2}
                                             px={4}
                                             fontStyle={'italic'}
-                                            _hover={{
-                                                background: useColorModeValue("gray.100", "gray.700")
-                                            }} />
+                                        />
                                         <EditableInput />
                                     </Editable>
                                 </Td>
