@@ -6,15 +6,17 @@ import { documentStored, getDocuments } from "../../utility/storageHelpers";
 import AuthLogin from "../auth/auth";
 import ThumbnailPreview from "./editor/ThumbnailPreview";
 
-const ThumbnailPreviewRow = ({
+export const ThumbnailGallery = ({
   documents,
+  onClick
 }: {
   documents: Array<documentStored> | null;
+  onClick?: (documentId: string) => void
 }) => {
 
   const childrenRenders = documents?.map((document, index: number) => {
     if (document) {
-      return <ThumbnailPreview documentId={document.id} key={index} documentName={document.documentName} thumbnail={document.thumbnail} />
+      return <ThumbnailPreview onClick={onClick} documentId={document.id} key={index} documentName={document.documentName} thumbnail={document.thumbnail} />
     }
   });
 
@@ -26,13 +28,13 @@ const ThumbnailPreviewRow = ({
 };
 
 
-export default function DocumentManager() {
+export function DocumentManager() {
   const session = useSession()
 
   return <>
     {<AuthLogin session={session}>
 
-      <ThumbnailPreviewRow documents={getDocuments()} />
+      <ThumbnailGallery documents={getDocuments()} />
     </AuthLogin>}
   </>
 }
