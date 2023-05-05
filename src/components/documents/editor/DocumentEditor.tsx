@@ -8,6 +8,8 @@ import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import DocumentTitle from "./DocumentTitle";
 import { QuillEditor } from "./QuillEditor";
+import debounce from 'lodash/debounce';
+
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -109,12 +111,26 @@ export function DocumentEditor(props: DocumentEditorProps) {
         setContent(updateDelta);
     };
 
-    const handleContentChange = (value: DeltaStatic) => {
-        setContent(value);
-        setLastModified(new Date());
+    const handleContentChange = 
+        useCallback(
+            debounce((value) => {
+                setContent(value);
+                setLastModified(new Date());
+              console.log('User stopped typing. Value:', value);
+              // Perform any other actions you want to take when the user stops typing
+            }, 500),
+            []
+          );
+    // const handleContentChange = (value: DeltaStatic) => {
+        
+    //     setContent(value);
+    //     setLastModified(new Date());
+
+    //     // #TODO: if content is part of comment-link,  update what we pass to diff viewer
+    // };
 
         // #TODO: if content is part of comment-link,  update what we pass to diff viewer
-    };
+ 
 
     const handleOnAiUpdatedPrompt = useCallback(
         (editedText: string, range?: Range) => {
@@ -263,6 +279,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
                 </GridItem>
                 <GridItem pl="2" area={"main"} marginTop="1rem">
                     <QuillEditor
+                        documentId={props.documentId}
                         initialHtmlData={props.documentHtml}
                         onContentChange={handleContentChange}
                         onAddComment={addAiConvo}

@@ -32,6 +32,8 @@ export default function DocumentPage(props: documentEditorPageProps) {
   const [showUpload, setShowUpload] = useState(
     props.blank
   );
+  console.log("heeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheee");
+  
 
   const [documentId, setDocumentId] = useState<string>(props.documentId)
 

@@ -104,7 +104,9 @@ interface quillEditorProps {
     ) => void;
     initialHtmlData?: string | null;
     content?: DeltaStatic;
-    documentName?: string;
+    documentName?: string | undefined;
+    documentId: string,
+
 }
 const modules = {
     toolbar: [
@@ -207,7 +209,11 @@ export function QuillEditor(props: quillEditorProps) {
     };
 
     useEffect(() => {
+        console.log("rerendering for document name");
+
         if (quillRef.current) {
+            console.log("rerendering for document name in body", props.documentName);
+            
             const editorNode = quillRef.current.getEditor().root;
             const width = editorNode.clientWidth;
             const height = editorNode.clientHeight / 2;
@@ -216,17 +222,22 @@ export function QuillEditor(props: quillEditorProps) {
                 const documentName = props.documentName;
 
                 updateDocuments((document: documentStored) => {
-                    if (document && document.documentName === documentName) {
+                    // console.log(document, 'yoooo');
+                    
+                    if (document && document.id === props.documentId) {
                         document.thumbnail = dataUrl;
-
-                        if (documentName) {
-                            document.documentName = documentName;
-
+                        if (document.documentName && props.documentName && document.documentName != props.documentName) {
+                            document.documentName = props.documentName;
+    
                         }
-
+    
                         document.content = quillRef?.current?.editor?.getContents();
                     }
 
+                    
+                    // }
+                    // console.log( document.documentName, "hey there", props.documentName);
+                    
                     return document;
                 })
             });
