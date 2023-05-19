@@ -4,7 +4,7 @@ import { EditIcon } from "@chakra-ui/icons";
 
 interface DocumentTitleProps {
     documentName?: string,
-    onDocumentNameChange: (newName: string) => void
+    onDocumentNameChange?: (newName: string) => void
 }
 
 const defaultDocumentName = "Untitled Document"
@@ -17,6 +17,7 @@ function DocumentTitle({ documentName = defaultDocumentName, ...props }: Documen
     }
 
     function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        if (props.onDocumentNameChange) 
         props.onDocumentNameChange(event.target.value);
     }
 

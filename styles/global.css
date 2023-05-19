@@ -1,3 +1,14 @@
+body {
+    margin: 0;
+    height: 100vh;
+}
+
+#__next {
+    height: 100vh;
+    overflow-y: clip;
+
+}
+
 .container {
     background-color: #F3F3F3;
     margin: 0;
@@ -31,3 +42,4 @@
     border: none;
     box-shadow: 0 0 5px 0 rgba(0, 0, 0, .5);
 }
+

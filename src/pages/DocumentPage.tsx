@@ -10,6 +10,7 @@ import utf8 from "utf8";
 import AuthLogin from "../components/auth/auth";
 import { DocumentEditor, aiCommentState } from "../components/documents/editor/DocumentEditor";
 import NavigationBar from "../components/sidebar/verticalSidebar";
+import WithSubnavigation from "../components/sidebar/horizontalNav";
 import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
 import { createNewDocument, getDocument } from "../utility/storageHelpers";
 import NewResumeModal from "./ImportResumeDialog";
@@ -36,6 +37,8 @@ export default function DocumentPage(props: documentEditorPageProps) {
   
 
   const [documentId, setDocumentId] = useState<string>(props.documentId)
+  const [navHeight, setNavHeight] = useState();
+
 
   const toast = useToast()
   const session = useSession()
@@ -99,11 +102,17 @@ export default function DocumentPage(props: documentEditorPageProps) {
     documentHtml={resumeHtml}
     documentName={props.documentName}
     aiComments={props.aiComments}
+    navHeight={navHeight}
   />
+  const handleChildHeightChange = (height : any) => {
+    // Do something with the height value
+    console.log('Child component height:', height);
+    setNavHeight(height);
+  };
 
 
   return (
-    <div className="App">
+    <div className="App" style={{minHeight: "100%"}} >
       {showUpload && <NewResumeModal
         isOpen={true}
         onClose={() => { }}
@@ -111,58 +120,61 @@ export default function DocumentPage(props: documentEditorPageProps) {
         onCopyPaste={onLoadEditor} />}
 
       {
-        props.hideNav ? docEditorComp
-          : <NavigationBar
-            newDocumentOnClick={() => setShowUpload(true)}
-            pdfExportOnClick={() => {
+        props.hideNav ? 
+          docEditorComp
+          : 
+          // <NavigationBar
+          //   newDocumentOnClick={() => setShowUpload(true)}
+          //   pdfExportOnClick={() => {
 
-              const documentDelta = getDocument(documentId)?.content;
+          //     const documentDelta = getDocument(documentId)?.content;
 
-              console.log((documentDelta?.ops?.length ?? 0) < 1, "del")
+          //     console.log((documentDelta?.ops?.length ?? 0) < 1, "del")
 
-              if ((documentDelta?.ops?.length ?? 0) < 1) {
-                toast({
-                  title: 'Cannot export empty document',
-                  description: `Start loading your resume and editing with our AI!`,
-                  status: 'info',
-                  duration: 3000,
-                  isClosable: true,
-                })
+          //     if ((documentDelta?.ops?.length ?? 0) < 1) {
+          //       toast({
+          //         title: 'Cannot export empty document',
+          //         description: `Start loading your resume and editing with our AI!`,
+          //         status: 'info',
+          //         duration: 3000,
+          //         isClosable: true,
+          //       })
 
-                return;
+          //       return;
 
-              }
+          //     }
 
-              toast({
-                title: 'Exporting document to PDF.',
-                description: `Your file ${props.documentName} is exporting`,
-                status: 'loading',
-                duration: 1000,
-                isClosable: true,
-              })
+          //     toast({
+          //       title: 'Exporting document to PDF.',
+          //       description: `Your file ${props.documentName} is exporting`,
+          //       status: 'loading',
+          //       duration: 1000,
+          //       isClosable: true,
+          //     })
 
-              const html: string = new QuillDeltaToHtmlConverter(documentDelta?.ops ?? [], {
-                inlineStyles: true
-              }).convert();
+          //     const html: string = new QuillDeltaToHtmlConverter(documentDelta?.ops ?? [], {
+          //       inlineStyles: true
+          //     }).convert();
 
-              const html_encoded = utf8.encode(html)
+          //     const html_encoded = utf8.encode(html)
 
-              getPdfFileFromHtml(html_encoded)
-                .then(blob => {
-                  saveAs(blob, `${props.documentName}.pdf`);
-                  toast({
-                    title: `${props.documentName}.pdf successfully exported`,
-                    description: "View the file in your downloads.",
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                  })
-                });
-            }}>
+          //     getPdfFileFromHtml(html_encoded)
+          //       .then(blob => {
+          //         saveAs(blob, `${props.documentName}.pdf`);
+          //         toast({
+          //           title: `${props.documentName}.pdf successfully exported`,
+          //           description: "View the file in your downloads.",
+          //           status: 'success',
+          //           duration: 3000,
+          //           isClosable: true,
+          //         })
+          //       });
+          //   }}>
             <AuthLogin session={session} show={!showUpload}>
+              <WithSubnavigation onHeightChange={handleChildHeightChange} />
               {docEditorComp}
             </AuthLogin>
-          </NavigationBar>
+          // </NavigationBar>
       }
     </div>
   );

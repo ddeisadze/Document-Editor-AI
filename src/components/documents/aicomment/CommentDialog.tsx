@@ -110,7 +110,7 @@ const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = []
                             >
                                 <Text fontSize="3xs" mb="1" textAlign={message.isUser ? 'right' : 'left'}>{message.isUser ? 'You' : 'System'}</Text>
                                 <Box
-                                    bg={message.isUser ? 'green.400' : 'blue.400'}
+                                    bg={message.isUser ? 'rgba(56,13,79, .8)' : 'rgba(56,13,79, 1)'}
                                     color="white"
                                     p="2"
                                     borderRadius="md"

@@ -25,6 +25,13 @@ export default function App({ Component, pageProps }: AppProps) {
                 },
             },
         },
+        colors: {
+            violet: {
+              100: "#f7fafc",
+              // ...
+              900: "#1a202c",
+            },
+          },
     });
 
     const [supabase] = useState(() => createBrowserSupabaseClient())
@@ -32,7 +39,7 @@ export default function App({ Component, pageProps }: AppProps) {
     return <>
         <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
             <MyUserContextProvider>
-                <ChakraProvider theme={theme}>
+                <ChakraProvider theme={theme} >
                     <Component {...pageProps} />
                 </ChakraProvider>
             </MyUserContextProvider>

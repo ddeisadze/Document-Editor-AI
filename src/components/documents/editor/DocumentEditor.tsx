@@ -1,4 +1,4 @@
-import { Grid, GridItem, Text } from "@chakra-ui/react";
+import { Grid, GridItem, Flex } from "@chakra-ui/react";
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 import { useCallback, useEffect, useState } from "react";
 import { Range } from "react-quill";
@@ -36,6 +36,7 @@ interface DocumentEditorProps {
     aiComments?: aiCommentState[],
     isDemoView?: boolean;
     initialDeltaStaticContent?: DeltaStatic | undefined;
+    navHeight?: string;
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
@@ -249,45 +250,24 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
     return (
         <>
-            <Grid
-                marginLeft={"5%"}
-                templateAreas={`"header header"
-                  "main comments"
-                  "footer comments"`}
-                gridTemplateRows={"50px 1fr 40px"}
-                gridTemplateColumns={`1fr ${commentWidth}`}
-                gap="1"
-            >
-                <GridItem pl="2" area={"header"}>
-                    <DocumentTitle
-                        documentName={documentName}
-                        onDocumentNameChange={(newName) => setDocumentName(newName)}
-                    />
-                    {lastModified && (
-                        <Text
-                            fontSize="sm"
-                            color="gray"
-                            fontStyle="italic"
-                            marginBottom="0.5rem"
-                        >
-                            Last modified: {lastModified.toLocaleString()}
-                        </Text>
-                    )}
-                </GridItem>
-                <GridItem pl="2" area={"comments"} maxHeight="100%" overflowY="auto">
-                    {chatComponents}
-                </GridItem>
-                <GridItem pl="2" area={"main"} marginTop="1rem">
-                    <QuillEditor
+            
+
+            <Flex flexDirection={'row'} >
+
+            <QuillEditor
                         documentId={props.documentId}
                         initialHtmlData={props.documentHtml}
                         onContentChange={handleContentChange}
                         onAddComment={addAiConvo}
                         content={content}
                         documentName={documentName}
+                        navHeight={props.navHeight}
                     />
-                </GridItem>
-            </Grid>
+                    <div className="yoo">
+                        {chatComponents}
+
+                    </div>
+            </Flex>
         </>
     );
 }
@@ -299,3 +279,4 @@ export interface SelectedText {
     left: Number;
     right: Number;
 }
+

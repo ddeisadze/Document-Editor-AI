@@ -1,57 +1,53 @@
-import {
-    Button,
-} from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { ChatCompletionRequestMessage } from "openai";
 import React, { ReactElement, useEffect, useReducer, useState } from "react";
 import { Range } from "react-quill";
-import openai from "../../../utility/openai";
+import openai from "../../../pages/openai";
 import CommentDialog from "./CommentDialog";
 
 export interface MessageModel {
-    message: string,
-    sentTime: string,
-    sender: string,
-    direction: string,
-    position: string,
+  message: string;
+  sentTime: string;
+  sender: string;
+  direction: string;
+  position: string;
 }
 
 export const returnAiRecs = (text?: string) => {
-    if (!text) {
-        return null;
-    }
+  if (!text) {
+    return null;
+  }
 
-    const regex = /Generated\s+answer:\s+(?<text>.+)/i
-    const result = text.match(regex);
+  const regex = /Generated\s+answer:\s+(?<text>.+)/i;
+  const result = text.match(regex);
 
-    if (result && result.groups) {
-        const updatedText = result.groups.text;
+  if (result && result.groups) {
+    const updatedText = result.groups.text;
 
-        return updatedText.trim();
-    } else {
-        return null;
-    }
-}
-
+    return updatedText.trim();
+  } else {
+    return null;
+  }
+};
 
 export function AiChat(props: {
-    handleUpdatePrompt?: (updatedText: string, range?: Range) => void | undefined;
-    onNewMessage?: (messages: MessageModel[]) => void;
-    messages?: MessageModel[];
+  handleUpdatePrompt?: (updatedText: string, range?: Range) => void | undefined;
+  onNewMessage?: (messages: MessageModel[]) => void;
+  messages?: MessageModel[];
 
-    footerComponent?: ReactElement;
-    headerComponent?: ReactElement;
+  footerComponent?: ReactElement;
+  headerComponent?: ReactElement;
 
-    top?: string | number
+  top?: string | number;
 
-    range?: Range;
-    selectedText: string;
-    width: string;
-
+  range?: Range;
+  selectedText: string;
+  width: string;
 }) {
-    const openAiDefaultValue: ChatCompletionRequestMessage[] = [
-        {
-            role: "system",
-            content: `You are a resume writing assistant. 
+  const openAiDefaultValue: ChatCompletionRequestMessage[] = [
+    {
+      role: "system",
+      content: `You are a resume writing assistant. 
             I will pass you a text and multiple requests from the user on the text.
             It is your job to answer and fulfill the request. 
 
@@ -62,119 +58,134 @@ export function AiChat(props: {
             ${props.selectedText}
             """
             `,
-        }
-    ];
+    },
+  ];
 
-    const [chatState, ChatDispatch] = useReducer(
-        (
-            myArray: MessageModel[],
-            { type, value }: { type: string; value?: MessageModel }
-        ): MessageModel[] => {
-            let updatedArr: MessageModel[] = [];
-            switch (type) {
-                case "add":
-                    if (!value) return myArray;
-                    updatedArr = [...myArray, value];
-                    props?.onNewMessage?.call({}, updatedArr)
-                    return updatedArr;
-                case "remove":
-                    updatedArr = myArray.filter((_: any, index: any) => index !== value);
-                    props?.onNewMessage?.call({}, updatedArr)
-                    return updatedArr;
-                case "reset":
-                    return props?.messages ?? myArray
-                default:
-                    updatedArr = myArray;
-                    props?.onNewMessage?.call({}, updatedArr)
-                    return updatedArr;
-            }
+  const [chatState, ChatDispatch] = useReducer(
+    (
+      myArray: MessageModel[],
+      { type, value }: { type: string; value?: MessageModel }
+    ): MessageModel[] => {
+      let updatedArr: MessageModel[] = [];
+      switch (type) {
+        case "add":
+          if (!value) return myArray;
+          updatedArr = [...myArray, value];
+          props?.onNewMessage?.call({}, updatedArr);
+          return updatedArr;
+        case "remove":
+          updatedArr = myArray.filter((_: any, index: any) => index !== value);
+          props?.onNewMessage?.call({}, updatedArr);
+          return updatedArr;
+        case "reset":
+          return props?.messages ?? myArray;
+        default:
+          updatedArr = myArray;
+          props?.onNewMessage?.call({}, updatedArr);
+          return updatedArr;
+      }
+    },
+    props?.messages ?? []
+  );
 
-        },
-        props?.messages ?? []
-    );
+  useEffect(() => {
+    ChatDispatch({
+      type: "reset",
+    });
+  }, [props.messages]);
 
-    useEffect(() => {
-        ChatDispatch({
-            type: "reset"
-        })
-    }, [props.messages])
+  const [openAiState, setOpenAiState] =
+    useState<ChatCompletionRequestMessage[]>(openAiDefaultValue);
 
-    const [openAiState, setOpenAiState] =
-        useState<ChatCompletionRequestMessage[]>(openAiDefaultValue);
+  const [openAiLoading, setOpenAiLoading] = useState<boolean>(false);
 
-    const [openAiLoading, setOpenAiLoading] = useState<boolean>(false);
+  const handleMessageSend = (question: string) => {
+    ChatDispatch({
+      type: "add",
+      value: {
+        message: question,
+        sentTime: "just now",
+        sender: "You",
+        direction: "outgoing",
+        position: "last",
+      },
+    });
 
-    const handleMessageSend = (question: string) => {
-        ChatDispatch({
-            type: "add",
-            value: {
-                message: question,
-                sentTime: "just now",
-                sender: "You",
-                direction: "outgoing",
-                position: "last",
-            },
-        });
-
-        setOpenAiLoading(true);
-        const newAiMessage: ChatCompletionRequestMessage = {
-            role: "user",
-            content: `Answer the request from the user below about the original text.
+    setOpenAiLoading(true);
+    const newAiMessage: ChatCompletionRequestMessage = {
+      role: "user",
+      content: `Answer the request from the user below about the original text.
 
             Request: """
-            ${question}"""`
-        };
-
-        openai
-            .createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: [...openAiState, newAiMessage]
-            })
-            .then((r: any) => {
-                const answer = r.data.choices[0]
-                    .message as ChatCompletionRequestMessage;
-                setOpenAiState([...openAiState, newAiMessage, answer]);
-
-                setOpenAiLoading(false);
-
-                ChatDispatch({
-                    type: "add",
-                    value: {
-                        message: answer.content,
-                        sentTime: "just now",
-                        sender: "AiDox",
-                        direction: "incoming",
-                        position: "last",
-                    },
-                });
-            })
-            .catch((e) => {
-                console.log("chatgpt error", e);
-                setOpenAiLoading(false);
-            });
+            ${question}"""`,
     };
 
-    const messagesToDialog = chatState.map((item) => ({ text: item?.message ?? "", isUser: item?.sender != "AiDox", time: new Date() }));
+    openai
+      .createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: [...openAiState, newAiMessage],
+      })
+      .then((r: any) => {
+        const answer = r.data.choices[0]
+          .message as ChatCompletionRequestMessage;
+        setOpenAiState([...openAiState, newAiMessage, answer]);
 
-    return (
-        <>
-            <CommentDialog
-                footerComponent={props.footerComponent}
-                headerComponent={props.headerComponent}
-                onMessageSend={comment => handleMessageSend(comment)}
-                width={props.width}
-                messages={messagesToDialog}
-                top={props.top}
-                messageReactionButtons={[
-                    returnAiRecs(chatState[chatState.length - 1]?.message?.toLowerCase())
-                    && <Button
-                        onClick={e => props.handleUpdatePrompt?.call({}, returnAiRecs(chatState[chatState.length - 1]?.message) ?? "", props.range)}>Insert change</Button>,
-                    // checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase())
-                    // && <Button
-                    //     onClick={onOpen}>Compare change</Button>
-                ]}
-                typingIndicator={openAiLoading}
-            />
-        </>
-    );
+        setOpenAiLoading(false);
+
+        ChatDispatch({
+          type: "add",
+          value: {
+            message: answer.content,
+            sentTime: "just now",
+            sender: "AiDox",
+            direction: "incoming",
+            position: "last",
+          },
+        });
+      })
+      .catch((e) => {
+        console.log("chatgpt error", e);
+        setOpenAiLoading(false);
+      });
+  };
+
+  const messagesToDialog = chatState.map((item) => ({
+    text: item?.message ?? "",
+    isUser: item?.sender != "AiDox",
+    time: new Date(),
+  }));
+
+  return (
+    <>
+      <CommentDialog
+        footerComponent={props.footerComponent}
+        headerComponent={props.headerComponent}
+        onMessageSend={(comment) => handleMessageSend(comment)}
+        width={props.width}
+        messages={messagesToDialog}
+        top={props.top}
+        messageReactionButtons={[
+          returnAiRecs(
+            chatState[chatState.length - 1]?.message?.toLowerCase()
+          ) && (
+            <Button
+              onClick={(e) =>
+                props.handleUpdatePrompt?.call(
+                  {},
+                  returnAiRecs(chatState[chatState.length - 1]?.message) ?? "",
+                  props.range
+                )
+              }
+            >
+              Insert change
+            </Button>
+          ),
+          // checkIfUpdatedPrompt(chatState[chatState.length - 1].message?.toLowerCase())
+          // && <Button
+          //     onClick={onOpen}>Compare change</Button>
+        ]}
+        typingIndicator={openAiLoading}
+      />
+    </>
+  );
 }

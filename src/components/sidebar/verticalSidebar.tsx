@@ -134,6 +134,7 @@ export default function NavigationBar({ children, showExport = true, ...rest }: 
             <Box ml={{ base: 0, md: 40 }}>
                 {children}
             </Box>
+            
         </Box>
     );
 }
@@ -148,7 +149,9 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
     return (
         <Box
             bg={useColorModeValue('white', 'gray.900')}
+            background={"linear-gradient(rgba(56, 13, 79, 1) 6%, rgba(255, 255, 255, 1) 48% )"}
             borderRight="1px"
+            color={"white"}
             borderRightColor={useColorModeValue('gray.200', 'gray.700')}
             w={{ base: 'full', md: 40 }}
             pos="fixed"
