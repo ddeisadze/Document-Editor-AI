@@ -1,5 +1,6 @@
-import { Box, Button, Flex, VStack, useToast } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box, Button, Flex, useToast, VStack } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { useUser } from "../../../utils/useUser";
 import { Batch } from "./batchesDisplay";
 import { ConfirmationStep } from "./confirmationStep";
 import { JobRowData, JobTable } from "./jobTable";
@@ -19,6 +20,18 @@ export function Stepper(props: StepperProps) {
     const [jobs, setJobs] = useState<JobRowData[]>([]);
 
     const toast = useToast();
+
+    const { user, isLoading, userDetails } = useUser();
+
+    useEffect(() => {
+        if (isLoading) return;
+
+        const firstName = userDetails?.first_name ?? "";
+        const lastName = userDetails?.last_name ?? "";
+
+        setUserInfo({ ...userInfo, firstName, lastName })
+    }, [user]);
+
 
     const onNextStep = () => {
         setStep((prevStep) => (prevStep < 3 ? prevStep + 1 : 1));

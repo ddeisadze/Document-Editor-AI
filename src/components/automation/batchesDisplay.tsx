@@ -30,6 +30,7 @@ interface BatchesDisplayProps {
 }
 
 export const BatchesDisplay: React.FC<BatchesDisplayProps> = ({ batches }) => {
+    console.log(batches)
     return (
         <VStack spacing={6} alignItems="stretch">
             <Box p={4} borderWidth={1} borderRadius="lg">

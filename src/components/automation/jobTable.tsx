@@ -10,6 +10,7 @@ import {
     TableContainer,
     Tbody,
     Td,
+    Text,
     Th,
     Thead,
     Tr
@@ -19,9 +20,15 @@ import { useState } from "react";
 export interface JobRowData {
     url: string;
     notes: string;
-    disability: boolean;
     termsAndConditions: boolean;
+
+    validations?: {
+        url: string;
+        termsAndConditions: string
+    }
+
 }
+
 
 interface JobTableProps {
     jobs?: JobRowData[],
@@ -29,6 +36,10 @@ interface JobTableProps {
     readonly?: boolean
 }
 
+const validateURL = (url: string): string => {
+    const regex = /^(ftp|http|https):\/\/[^ "]+$/;
+    return regex.test(url) ? "" : "Invalid URL";
+};
 
 export function JobTable({ readonly = false, ...props }: JobTableProps) {
     const [rows, setRows] = useState<JobRowData[]>(props.jobs ?? []);
@@ -38,21 +49,31 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
     const addRow = () => {
         setRows([
             ...rows,
-            { url: "", notes: "", disability: false, termsAndConditions: false },
+            { url: "", notes: "", termsAndConditions: false },
         ]);
     };
 
     const updateRow = (index: number, newRowData: JobRowData) => {
-        const newRows = rows.map((row, idx) => (idx === index ? { ...newRowData } : row));
-        setRows(
-            newRows
-        );
+        const isUrlValid = validateURL(newRowData.url);
+        const isTermsAndConditionValid = !newRowData.termsAndConditions ? "Check terms and conditions." : "";
+
+        const newRows = rows.map((row, idx) => (idx === index ? {
+            ...newRowData,
+            validations: {
+                url: isUrlValid,
+                termsAndConditions: isTermsAndConditionValid
+            }
+        } : row));
+
+        if (newRowData.url)
+            setRows(
+                newRows
+            );
 
         if (props.onChange) {
             props.onChange(newRows)
         }
     };
-
 
     return (
 
@@ -63,7 +84,6 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                         <Tr>
                             <Th>Job URL</Th>
                             <Th>Additional Notes</Th>
-                            <Th>Disability</Th>
                             <Th>Terms & Conditions</Th>
                         </Tr>
                     </Thead>
@@ -77,12 +97,19 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                                         value={row.url}
                                         onChange={(url) => updateRow(index, { ...row, url })}
                                     >
-                                        <EditablePreview py={2}
-                                            fontStyle={'italic'}
+                                        <EditablePreview
+                                            py={2}
+                                            fontStyle={row.validations?.url ? "normal" : "italic"}
                                             px={4}
+                                            color={row.validations?.url ? "red.500" : "inherit"}
                                         />
                                         <EditableInput />
                                     </Editable>
+                                    {row.validations?.url && (
+                                        <Text fontSize="sm" color="red.500" mt={1}>
+                                            {row.validations?.url}
+                                        </Text>
+                                    )}
                                 </Td>
                                 <Td>
                                     <Editable
@@ -100,17 +127,8 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                                 </Td>
                                 <Td>
                                     <Checkbox
+                                        color={row.validations?.termsAndConditions ? "red.500" : "inherit"}
                                         isReadOnly={readonly}
-                                        isChecked={row.disability}
-                                        onChange={(e) =>
-                                            updateRow(index, { ...row, disability: e.target.checked })
-                                        }
-                                    />
-                                </Td>
-                                <Td>
-                                    <Checkbox
-                                        isReadOnly={readonly}
-
                                         isChecked={row.termsAndConditions}
                                         onChange={(e) =>
                                             updateRow(index, {
@@ -119,6 +137,11 @@ export function JobTable({ readonly = false, ...props }: JobTableProps) {
                                             })
                                         }
                                     />
+                                    {row.validations?.termsAndConditions && (
+                                        <Text fontSize="sm" color="red.500" mt={1}>
+                                            {row.validations?.termsAndConditions}
+                                        </Text>
+                                    )}
                                 </Td>
                             </Tr>
                         ))}
