@@ -14,6 +14,8 @@ import WithSubnavigation from "../components/sidebar/horizontalNav";
 import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
 import { createNewDocument, getDocument } from "../utility/storageHelpers";
 import NewResumeModal from "./ImportResumeDialog";
+import { Tabs } from '@chakra-ui/react';
+
 
 const Delta = Quill.import("delta") as typeof DeltaStatic;
 
@@ -113,6 +115,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
 
   return (
     <div className="App" style={{minHeight: "100%"}} >
+      <Tabs>
       {showUpload && <NewResumeModal
         isOpen={true}
         onClose={() => { }}
@@ -176,6 +179,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
             </AuthLogin>
           // </NavigationBar>
       }
+      </Tabs>
     </div>
   );
 }

@@ -294,6 +294,7 @@ export function QuillEditor(props: quillEditorProps) {
           height: "100vh",
           minWidth: "50%",
           overflow: "hidden",
+          borderRight: "1px solid #e5e7eb",
         }}
         placeholder="Copy paste resume from Google Drive or any file here...."
         className={"container"}

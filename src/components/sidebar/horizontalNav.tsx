@@ -9,13 +9,14 @@ import {
     Collapse,
     Icon,
     Link,
-    Popover,
-    PopoverTrigger,
+    TabList, 
+    Tab,
     PopoverContent,
     useColorModeValue,
     useBreakpointValue,
     useDisclosure,
   } from '@chakra-ui/react';
+
   import {
     HamburgerIcon,
     CloseIcon,
@@ -62,9 +63,7 @@ import {
           minH={'60px'}
           py={{ base: 2 }}
           px={{ base: 4 }}
-          borderBottom={1}
-          borderStyle={'solid'}
-          borderColor={useColorModeValue('gray.200', 'gray.900')}
+          border={"0px solid #e5e7eb"}          
           align={'center'}>
           <Flex
             flex={{ base: 1, md: 'auto' }}
@@ -89,6 +88,9 @@ import {
   
             <Flex display={{ base: 'none', md: 'flex', }} ml={10} alignItems="center">
               <DesktopNav />
+            </Flex>
+            <Flex alignItems="center" justifyContent="center" margin='auto'>
+                <TabListComponent/>
             </Flex>
           </Flex>
   
@@ -129,8 +131,17 @@ import {
       </Box>
     );
   }
+
+  const TabListComponent = () => {
+    return (
+      <TabList>
+        <Tab>One</Tab>
+        <Tab>Two</Tab>
+      </TabList>
+    );
+  };
   const CustomToolbar = () => (
-    <div id="toolbar" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+    <div id="toolbar" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', border: "1px solid #e5e7eb"}}>
       <select className="ql-header" defaultValue={""} onChange={e => e.persist()}>
         <option value="1" />
         <option value="2" />
