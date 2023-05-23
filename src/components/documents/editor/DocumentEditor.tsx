@@ -1,4 +1,5 @@
 import { Grid, GridItem, Text } from "@chakra-ui/react";
+import debounce from 'lodash/debounce';
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 import { useCallback, useEffect, useState } from "react";
 import { Range } from "react-quill";
@@ -8,7 +9,6 @@ import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import DocumentTitle from "./DocumentTitle";
 import { QuillEditor } from "./QuillEditor";
-import debounce from 'lodash/debounce';
 
 
 const Delta = Quill.import("delta") as typeof DeltaType;
@@ -36,6 +36,8 @@ interface DocumentEditorProps {
     aiComments?: aiCommentState[],
     isDemoView?: boolean;
     initialDeltaStaticContent?: DeltaStatic | undefined;
+    handleGetEditor?: (editor: ReactQuill) => void
+
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
@@ -111,26 +113,26 @@ export function DocumentEditor(props: DocumentEditorProps) {
         setContent(updateDelta);
     };
 
-    const handleContentChange = 
+    const handleContentChange =
         useCallback(
             debounce((value) => {
                 setContent(value);
                 setLastModified(new Date());
-              console.log('User stopped typing. Value:', value);
-              // Perform any other actions you want to take when the user stops typing
+                console.log('User stopped typing. Value:', value);
+                // Perform any other actions you want to take when the user stops typing
             }, 500),
             []
-          );
+        );
     // const handleContentChange = (value: DeltaStatic) => {
-        
+
     //     setContent(value);
     //     setLastModified(new Date());
 
     //     // #TODO: if content is part of comment-link,  update what we pass to diff viewer
     // };
 
-        // #TODO: if content is part of comment-link,  update what we pass to diff viewer
- 
+    // #TODO: if content is part of comment-link,  update what we pass to diff viewer
+
 
     const handleOnAiUpdatedPrompt = useCallback(
         (editedText: string, range?: Range) => {
@@ -279,6 +281,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
                 </GridItem>
                 <GridItem pl="2" area={"main"} marginTop="1rem">
                     <QuillEditor
+                        handleGetEditor={props.handleGetEditor}
                         documentId={props.documentId}
                         initialHtmlData={props.documentHtml}
                         onContentChange={handleContentChange}

@@ -1,11 +1,12 @@
 import { useOutsideClick } from "@chakra-ui/react";
+import { useTour } from "@reactour/tour";
 import html2canvas from "html2canvas";
 import { DeltaStatic, Delta as DeltaType } from "quill";
 import React, { useEffect, useState } from "react";
 import ReactQuill, { Quill, Range } from "react-quill";
 import { useReadonly } from "../../../contexts";
 import openai from "../../../utility/openai";
-import { documentStored, updateDocuments } from "../../../utility/storageHelpers";
+import { documentStored, getIsNewUser, updateDocuments } from "../../../utility/storageHelpers";
 import { SelectedText } from "./DocumentEditor";
 import styles from "./QuillEditor.module.css";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
@@ -106,7 +107,7 @@ interface quillEditorProps {
     content?: DeltaStatic;
     documentName?: string | undefined;
     documentId: string,
-
+    handleGetEditor?: (editor: ReactQuill) => void
 }
 const modules = {
     toolbar: [
@@ -212,8 +213,7 @@ export function QuillEditor(props: quillEditorProps) {
         console.log("rerendering for document name");
 
         if (quillRef.current) {
-            console.log("rerendering for document name in body", props.documentName);
-            
+
             const editorNode = quillRef.current.getEditor().root;
             const width = editorNode.clientWidth;
             const height = editorNode.clientHeight / 2;
@@ -223,26 +223,38 @@ export function QuillEditor(props: quillEditorProps) {
 
                 updateDocuments((document: documentStored) => {
                     // console.log(document, 'yoooo');
-                    
+
                     if (document && document.id === props.documentId) {
                         document.thumbnail = dataUrl;
                         if (document.documentName && props.documentName && document.documentName != props.documentName) {
                             document.documentName = props.documentName;
-    
+
                         }
-    
+
                         document.content = quillRef?.current?.editor?.getContents();
                     }
 
-                    
+
                     // }
                     // console.log( document.documentName, "hey there", props.documentName);
-                    
+
                     return document;
                 })
             });
         }
     }, [props.content, props.documentName]);
+
+    const { isOpen, currentStep, steps, setIsOpen, setCurrentStep } = useTour()
+
+
+    useEffect(() => {
+
+        if (quillRef.current && getIsNewUser()) {
+            quillRef?.current?.editor?.setSelection(222, 148);
+            setIsOpen(true)
+        }
+
+    }, [quillRef.current]);
 
 
     return (
@@ -259,6 +271,7 @@ export function QuillEditor(props: quillEditorProps) {
                 modules={modules}
                 formats={formats}
                 onChangeSelection={readonlyContext?.readonly ? () => { } : (range: Range) => {
+                    console.log("selection", range)
                     if (range?.length ?? 0 > 0) {
                         var text = quillRef.current?.editor?.getText(
                             range?.index,
