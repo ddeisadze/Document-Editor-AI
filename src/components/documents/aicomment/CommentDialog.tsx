@@ -16,6 +16,8 @@ interface Props {
     headerComponent?: ReactElement
 
     messageReactionButtons: (ReactElement | null | "")[]
+
+    className?: string;
 }
 
 export interface Message {
@@ -71,6 +73,7 @@ const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = []
 
     return (
         <Grid
+            className={props.className}
             style={{
                 zIndex: 200
             }}

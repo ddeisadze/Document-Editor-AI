@@ -2,7 +2,7 @@ import {
     Button,
 } from "@chakra-ui/react";
 import { ChatCompletionRequestMessage } from "openai";
-import React, { ReactElement, useEffect, useReducer, useState } from "react";
+import { ReactElement, useEffect, useReducer, useState } from "react";
 import { Range } from "react-quill";
 import openai from "../../../utility/openai";
 import CommentDialog from "./CommentDialog";
@@ -159,6 +159,7 @@ export function AiChat(props: {
     return (
         <>
             <CommentDialog
+                className="ai-chat"
                 footerComponent={props.footerComponent}
                 headerComponent={props.headerComponent}
                 onMessageSend={comment => handleMessageSend(comment)}

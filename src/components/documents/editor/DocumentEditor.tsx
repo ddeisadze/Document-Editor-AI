@@ -13,6 +13,14 @@ import { QuillEditor } from "./QuillEditor";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
+const DEFAULT_MESSAGE_ON_NEW_CHAT: MessageModel = {
+    direction: "incoming",
+    message: "How can I help you?",
+    position: "first",
+    sender: "Aidox",
+    sentTime: "just now",
+}
+
 export interface aiCommentState {
     id: string;
     isOpen: boolean;
@@ -36,7 +44,6 @@ interface DocumentEditorProps {
     aiComments?: aiCommentState[],
     isDemoView?: boolean;
     initialDeltaStaticContent?: DeltaStatic | undefined;
-    handleGetEditor?: (editor: ReactQuill) => void
 
 }
 
@@ -58,7 +65,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
     useEffect(() => {
         if (props.initialDeltaStaticContent) {
-            console.log(props.initialDeltaStaticContent, "ssss")
             setContent(props.initialDeltaStaticContent)
         }
     }, [props.initialDeltaStaticContent])
@@ -113,7 +119,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
         setContent(updateDelta);
     };
 
-    const handleContentChange =
+    const handleContentChangeDelayed =
         useCallback(
             debounce((value) => {
                 setContent(value);
@@ -123,16 +129,12 @@ export function DocumentEditor(props: DocumentEditorProps) {
             }, 500),
             []
         );
-    // const handleContentChange = (value: DeltaStatic) => {
 
-    //     setContent(value);
-    //     setLastModified(new Date());
-
-    //     // #TODO: if content is part of comment-link,  update what we pass to diff viewer
-    // };
-
-    // #TODO: if content is part of comment-link,  update what we pass to diff viewer
-
+    const handleContentChangeImmediate =
+        (value: DeltaStatic) => {
+            setContent(value);
+            setLastModified(new Date());
+        }
 
     const handleOnAiUpdatedPrompt = useCallback(
         (editedText: string, range?: Range) => {
@@ -149,8 +151,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
             // Get the attributes for the range
             const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
-
-            console.log("attrs", attributes["commentLink"]);
 
             //#todo: we need to update range here also when there are changes made to range from editor
             const updateDelta = content.compose(
@@ -188,7 +188,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
                     selectedText: selectedAttrs.text,
                     width: commentWidth,
                     isOpen: true,
-                    messageHistory: []
+                    messageHistory: [DEFAULT_MESSAGE_ON_NEW_CHAT]
                 },
             ];
 
@@ -247,8 +247,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
         />
     ));
 
-    console.table(chatComponents);
-
     return (
         <>
             <Grid
@@ -281,10 +279,9 @@ export function DocumentEditor(props: DocumentEditorProps) {
                 </GridItem>
                 <GridItem pl="2" area={"main"} marginTop="1rem">
                     <QuillEditor
-                        handleGetEditor={props.handleGetEditor}
                         documentId={props.documentId}
                         initialHtmlData={props.documentHtml}
-                        onContentChange={handleContentChange}
+                        onContentChangeDelayed={handleContentChangeDelayed}
                         onAddComment={addAiConvo}
                         content={content}
                         documentName={documentName}

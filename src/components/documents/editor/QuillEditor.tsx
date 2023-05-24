@@ -97,7 +97,8 @@ class CommentLinkBlot extends Quill.import("blots/inline") {
 Quill.register(CommentLinkBlot);
 
 interface quillEditorProps {
-    onContentChange?: (value: DeltaStatic) => void;
+    onContentChangeDelayed?: (value: DeltaStatic) => void;
+
     onAddComment?: (
         commentId: string,
         range: Range,
@@ -106,8 +107,7 @@ interface quillEditorProps {
     initialHtmlData?: string | null;
     content?: DeltaStatic;
     documentName?: string | undefined;
-    documentId: string,
-    handleGetEditor?: (editor: ReactQuill) => void
+    documentId: string
 }
 const modules = {
     toolbar: [
@@ -153,16 +153,20 @@ export function QuillEditor(props: quillEditorProps) {
 
     const readonlyContext = useReadonly();
 
-    const handleChange = (): void => {
-        if (quillRef.current?.editor && props.onContentChange) {
-            props.onContentChange(quillRef.current.editor.getContents());
+    const handleChange = (values: any): void => {
+        if (quillRef.current?.editor && props.onContentChangeDelayed) {
+            const changedContent = quillRef.current.editor.getContents();
+            console.log("content changed", changedContent)
+            props.onContentChangeDelayed(changedContent);
         }
     };
 
     const onLaunchAiClicked = (range: Range, selectedAttrs: SelectedText) => {
+        console.log("clicl")
         const commentId = new Date().getTime();
 
         if (range) {
+            console.log(range, "is range detected")
             const ops = new Delta().retain(range.index).retain(range.length, {
                 commentLink: {
                     id: commentId.toString(),
@@ -170,7 +174,12 @@ export function QuillEditor(props: quillEditorProps) {
                 },
             });
 
-            quillRef?.current?.editor?.updateContents(ops);
+            // quillRef?.current?.editor?.updateContents(ops);
+            console.log("new contents", quillRef?.current?.editor?.getContents().compose(ops))
+            if (quillRef.current?.editor && props.onContentChangeDelayed) {
+                props.onContentChangeDelayed(quillRef?.current?.editor?.getContents().compose(ops))
+
+            }
         }
 
         props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
@@ -248,14 +257,14 @@ export function QuillEditor(props: quillEditorProps) {
 
 
     useEffect(() => {
-
-        if (quillRef.current && getIsNewUser()) {
-            quillRef?.current?.editor?.setSelection(222, 148);
+        if (quillRef.current && getIsNewUser() && !isOpen) {
+            // quillRef?.current?.editor?.setSelection(222, 148);
             setIsOpen(true)
         }
 
     }, [quillRef.current]);
 
+    const isNewUser = getIsNewUser();
 
     return (
         <>
@@ -267,23 +276,19 @@ export function QuillEditor(props: quillEditorProps) {
                 className={"container"}
                 ref={quillRef}
                 value={props.content ?? props.initialHtmlData ?? ""}
-                onChange={handleChange}
+                onChange={(content, delta, source, editor) => {
+                    console.log(content, delta, source, "from editor")
+                    handleChange(delta)
+                }}
                 modules={modules}
                 formats={formats}
                 onChangeSelection={readonlyContext?.readonly ? () => { } : (range: Range) => {
-                    console.log("selection", range)
-                    if (range?.length ?? 0 > 0) {
+                    const rangeToAllowSelection = isNewUser ? 10 : 0;
+                    if ((range?.length ?? 0) > rangeToAllowSelection) {
                         var text = quillRef.current?.editor?.getText(
                             range?.index,
                             range?.length
                         );
-                        const bounds = quillRef.current?.editor?.getBounds(
-                            range?.index ?? 0
-                        );
-
-                        const editingArea = quillRef.current
-                            ?.getEditingArea()
-                            .getBoundingClientRect();
 
                         const scrollLeft =
                             document.documentElement.scrollLeft || document.body.scrollLeft;
