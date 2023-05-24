@@ -1,4 +1,5 @@
 import { Grid, GridItem, Text } from "@chakra-ui/react";
+import debounce from 'lodash/debounce';
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 import { useCallback, useEffect, useState } from "react";
 import { Range } from "react-quill";
@@ -8,10 +9,17 @@ import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import DocumentTitle from "./DocumentTitle";
 import { QuillEditor } from "./QuillEditor";
-import debounce from 'lodash/debounce';
 
 
 const Delta = Quill.import("delta") as typeof DeltaType;
+
+const DEFAULT_MESSAGE_ON_NEW_CHAT: MessageModel = {
+    direction: "incoming",
+    message: "How can I help you?",
+    position: "first",
+    sender: "Aidox",
+    sentTime: "just now",
+}
 
 export interface aiCommentState {
     id: string;
@@ -36,6 +44,7 @@ interface DocumentEditorProps {
     aiComments?: aiCommentState[],
     isDemoView?: boolean;
     initialDeltaStaticContent?: DeltaStatic | undefined;
+
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
@@ -56,7 +65,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
     useEffect(() => {
         if (props.initialDeltaStaticContent) {
-            console.log(props.initialDeltaStaticContent, "ssss")
             setContent(props.initialDeltaStaticContent)
         }
     }, [props.initialDeltaStaticContent])
@@ -111,26 +119,22 @@ export function DocumentEditor(props: DocumentEditorProps) {
         setContent(updateDelta);
     };
 
-    const handleContentChange = 
+    const handleContentChangeDelayed =
         useCallback(
             debounce((value) => {
                 setContent(value);
                 setLastModified(new Date());
-              console.log('User stopped typing. Value:', value);
-              // Perform any other actions you want to take when the user stops typing
+                console.log('User stopped typing. Value:', value);
+                // Perform any other actions you want to take when the user stops typing
             }, 500),
             []
-          );
-    // const handleContentChange = (value: DeltaStatic) => {
-        
-    //     setContent(value);
-    //     setLastModified(new Date());
+        );
 
-    //     // #TODO: if content is part of comment-link,  update what we pass to diff viewer
-    // };
-
-        // #TODO: if content is part of comment-link,  update what we pass to diff viewer
- 
+    const handleContentChangeImmediate =
+        (value: DeltaStatic) => {
+            setContent(value);
+            setLastModified(new Date());
+        }
 
     const handleOnAiUpdatedPrompt = useCallback(
         (editedText: string, range?: Range) => {
@@ -147,8 +151,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
             // Get the attributes for the range
             const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
-
-            console.log("attrs", attributes["commentLink"]);
 
             //#todo: we need to update range here also when there are changes made to range from editor
             const updateDelta = content.compose(
@@ -186,7 +188,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
                     selectedText: selectedAttrs.text,
                     width: commentWidth,
                     isOpen: true,
-                    messageHistory: []
+                    messageHistory: [DEFAULT_MESSAGE_ON_NEW_CHAT]
                 },
             ];
 
@@ -245,8 +247,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
         />
     ));
 
-    console.table(chatComponents);
-
     return (
         <>
             <Grid
@@ -281,7 +281,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
                     <QuillEditor
                         documentId={props.documentId}
                         initialHtmlData={props.documentHtml}
-                        onContentChange={handleContentChange}
+                        onContentChangeDelayed={handleContentChangeDelayed}
                         onAddComment={addAiConvo}
                         content={content}
                         documentName={documentName}

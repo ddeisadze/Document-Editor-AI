@@ -51,7 +51,7 @@ export function AiCommentManager(props: aiChatManagerProps) {
 
     const componentToDisp = isOpen ?
         <AiChat
-            footerComponent={<Button variant={"outline"} colorScheme='green' onClick={() => setIsDiffOpen(true)}>Open in Collab Mode</Button>}
+            footerComponent={<Button className="collab-mode-button" variant={"outline"} colorScheme='green' onClick={() => setIsDiffOpen(true)}>Open in Collab Mode</Button>}
             headerComponent={<ButtonGroup variant='outline' size={"sm"} spacing='2' float={"right"}>
                 <IconButton onClick={() => props?.onCloseConvo?.call({})} size={"sm"} aria-label='Minimize chat' icon={<FaWindowMinimize />} />
                 <IconButton title="Resolve and close chat" onClick={props.onRemoveComponent} size={"sm"} colorScheme="red" aria-label='Resolve chat' icon={<FaWindowClose />} />

@@ -16,13 +16,10 @@ export default function DocumentPageById() {
 
   useEffect(() => {
     if (!router.query.id) return;
-    console.log(router.query.id);
 
     const id: string = router.query.id as string;
 
     const documents: documentStored[] = getDocuments() ?? []
-
-    console.log(documents)
 
     const existingDocument = documents.find(
       (document) => document?.id?.toString() === id
@@ -34,7 +31,6 @@ export default function DocumentPageById() {
     }
   }, [router.query]);
 
-  console.log(document)
 
   return (
     <>

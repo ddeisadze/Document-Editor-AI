@@ -14,6 +14,7 @@ import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers
 import { createNewDocument, getDocument } from "../utility/storageHelpers";
 import NewResumeModal from "./ImportResumeDialog";
 
+
 const Delta = Quill.import("delta") as typeof DeltaStatic;
 
 interface documentEditorPageProps {
@@ -32,8 +33,6 @@ export default function DocumentPage(props: documentEditorPageProps) {
   const [showUpload, setShowUpload] = useState(
     props.blank
   );
-  console.log("heeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheee");
-  
 
   const [documentId, setDocumentId] = useState<string>(props.documentId)
 
@@ -93,6 +92,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
   };
 
   const docEditorComp = <DocumentEditor
+    isDemoView
     key={documentId}
     documentId={documentId}
     initialDeltaStaticContent={typeof props.documentContent == typeof DeltaStatic ? props.documentContent as DeltaStatic : new Delta(props.documentContent as DeltaOperation[])}
@@ -100,7 +100,6 @@ export default function DocumentPage(props: documentEditorPageProps) {
     documentName={props.documentName}
     aiComments={props.aiComments}
   />
-
 
   return (
     <div className="App">
@@ -117,8 +116,6 @@ export default function DocumentPage(props: documentEditorPageProps) {
             pdfExportOnClick={() => {
 
               const documentDelta = getDocument(documentId)?.content;
-
-              console.log((documentDelta?.ops?.length ?? 0) < 1, "del")
 
               if ((documentDelta?.ops?.length ?? 0) < 1) {
                 toast({
@@ -162,8 +159,10 @@ export default function DocumentPage(props: documentEditorPageProps) {
             <AuthLogin session={session} show={!showUpload}>
               {docEditorComp}
             </AuthLogin>
+
           </NavigationBar>
       }
+
     </div>
   );
 }

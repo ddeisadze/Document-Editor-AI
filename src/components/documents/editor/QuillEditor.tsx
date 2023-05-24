@@ -1,11 +1,12 @@
 import { useOutsideClick } from "@chakra-ui/react";
+import { useTour } from "@reactour/tour";
 import html2canvas from "html2canvas";
 import { DeltaStatic, Delta as DeltaType } from "quill";
 import React, { useEffect, useState } from "react";
 import ReactQuill, { Quill, Range } from "react-quill";
 import { useReadonly } from "../../../contexts";
 import openai from "../../../utility/openai";
-import { documentStored, updateDocuments } from "../../../utility/storageHelpers";
+import { documentStored, getIsNewUser, updateDocuments } from "../../../utility/storageHelpers";
 import { SelectedText } from "./DocumentEditor";
 import styles from "./QuillEditor.module.css";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
@@ -96,7 +97,8 @@ class CommentLinkBlot extends Quill.import("blots/inline") {
 Quill.register(CommentLinkBlot);
 
 interface quillEditorProps {
-    onContentChange?: (value: DeltaStatic) => void;
+    onContentChangeDelayed?: (value: DeltaStatic) => void;
+
     onAddComment?: (
         commentId: string,
         range: Range,
@@ -105,8 +107,7 @@ interface quillEditorProps {
     initialHtmlData?: string | null;
     content?: DeltaStatic;
     documentName?: string | undefined;
-    documentId: string,
-
+    documentId: string
 }
 const modules = {
     toolbar: [
@@ -152,16 +153,20 @@ export function QuillEditor(props: quillEditorProps) {
 
     const readonlyContext = useReadonly();
 
-    const handleChange = (): void => {
-        if (quillRef.current?.editor && props.onContentChange) {
-            props.onContentChange(quillRef.current.editor.getContents());
+    const handleChange = (values: any): void => {
+        if (quillRef.current?.editor && props.onContentChangeDelayed) {
+            const changedContent = quillRef.current.editor.getContents();
+            console.log("content changed", changedContent)
+            props.onContentChangeDelayed(changedContent);
         }
     };
 
     const onLaunchAiClicked = (range: Range, selectedAttrs: SelectedText) => {
+        console.log("clicl")
         const commentId = new Date().getTime();
 
         if (range) {
+            console.log(range, "is range detected")
             const ops = new Delta().retain(range.index).retain(range.length, {
                 commentLink: {
                     id: commentId.toString(),
@@ -169,7 +174,12 @@ export function QuillEditor(props: quillEditorProps) {
                 },
             });
 
-            quillRef?.current?.editor?.updateContents(ops);
+            // quillRef?.current?.editor?.updateContents(ops);
+            console.log("new contents", quillRef?.current?.editor?.getContents().compose(ops))
+            if (quillRef.current?.editor && props.onContentChangeDelayed) {
+                props.onContentChangeDelayed(quillRef?.current?.editor?.getContents().compose(ops))
+
+            }
         }
 
         props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
@@ -212,8 +222,7 @@ export function QuillEditor(props: quillEditorProps) {
         console.log("rerendering for document name");
 
         if (quillRef.current) {
-            console.log("rerendering for document name in body", props.documentName);
-            
+
             const editorNode = quillRef.current.getEditor().root;
             const width = editorNode.clientWidth;
             const height = editorNode.clientHeight / 2;
@@ -223,27 +232,39 @@ export function QuillEditor(props: quillEditorProps) {
 
                 updateDocuments((document: documentStored) => {
                     // console.log(document, 'yoooo');
-                    
+
                     if (document && document.id === props.documentId) {
                         document.thumbnail = dataUrl;
                         if (document.documentName && props.documentName && document.documentName != props.documentName) {
                             document.documentName = props.documentName;
-    
+
                         }
-    
+
                         document.content = quillRef?.current?.editor?.getContents();
                     }
 
-                    
+
                     // }
                     // console.log( document.documentName, "hey there", props.documentName);
-                    
+
                     return document;
                 })
             });
         }
     }, [props.content, props.documentName]);
 
+    const { isOpen, currentStep, steps, setIsOpen, setCurrentStep } = useTour()
+
+
+    useEffect(() => {
+        if (quillRef.current && getIsNewUser() && !isOpen) {
+            // quillRef?.current?.editor?.setSelection(222, 148);
+            setIsOpen(true)
+        }
+
+    }, [quillRef.current]);
+
+    const isNewUser = getIsNewUser();
 
     return (
         <>
@@ -255,22 +276,19 @@ export function QuillEditor(props: quillEditorProps) {
                 className={"container"}
                 ref={quillRef}
                 value={props.content ?? props.initialHtmlData ?? ""}
-                onChange={handleChange}
+                onChange={(content, delta, source, editor) => {
+                    console.log(content, delta, source, "from editor")
+                    handleChange(delta)
+                }}
                 modules={modules}
                 formats={formats}
                 onChangeSelection={readonlyContext?.readonly ? () => { } : (range: Range) => {
-                    if (range?.length ?? 0 > 0) {
+                    const rangeToAllowSelection = isNewUser ? 10 : 0;
+                    if ((range?.length ?? 0) > rangeToAllowSelection) {
                         var text = quillRef.current?.editor?.getText(
                             range?.index,
                             range?.length
                         );
-                        const bounds = quillRef.current?.editor?.getBounds(
-                            range?.index ?? 0
-                        );
-
-                        const editingArea = quillRef.current
-                            ?.getEditingArea()
-                            .getBoundingClientRect();
 
                         const scrollLeft =
                             document.documentElement.scrollLeft || document.body.scrollLeft;

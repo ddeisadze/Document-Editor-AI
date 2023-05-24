@@ -7,7 +7,7 @@ const DocumentEditorPage = dynamic(() => import('../../src/pages/DocumentPage'),
 })
 
 
-const aiComments = [
+export const aiComments = [
     {
         "id": "1683123862559",
         "range": {
@@ -70,7 +70,7 @@ const aiComments = [
     }
 ]
 
-const documentDelta = [
+export const documentDelta = [
     {
         "attributes": {
             "background": "transparent",

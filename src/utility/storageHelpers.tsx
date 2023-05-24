@@ -76,3 +76,14 @@ export const getBatches: () => Batch[] = () => {
     const batchString = localStorage.getItem("batches")
     return batchString ? JSON.parse(batchString) as Batch[] : []
 }
+
+const NEW_USER_KEY = "myAppIsNewUser";
+
+export const getIsNewUser = (): boolean => {
+    const isNewUserStr = localStorage.getItem(NEW_USER_KEY);
+    return isNewUserStr ? JSON.parse(isNewUserStr) : true;
+};
+
+export const setIsNewUser = (isNewUser: boolean): void => {
+    localStorage.setItem(NEW_USER_KEY, JSON.stringify(isNewUser));
+};
