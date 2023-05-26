@@ -104,19 +104,10 @@ function PersonalInfoComponent({ personalInfo, setPersonalInfo }: { personalInfo
 }
 
 
-function EducationComponent({ education, setEducation }: { education: EducationType[]; setEducation: Function }) {
-  // Similar to ExperienceComponent, create methods to update education entries and render form controls for each field
-}
-
 interface ProgrammingLanguageType {
   language: string;
   description: string;
 }
-
-function ProgrammingLanguagesComponent({ programmingLanguages, setProgrammingLanguages }: { programmingLanguages: ProgrammingLanguageType[]; setProgrammingLanguages: Function }) {
-  // Similar to ExperienceComponent, create methods to update programming languages entries and render form controls for each field
-}
-
 
 const ResumeBuilder: React.FC = () => {
   const [skills, setSkills] = useState<SkillType[]>([]);
@@ -172,7 +163,7 @@ const ResumeBuilder: React.FC = () => {
 
     markdown += '## Experience\n\n';
     experiences.forEach(exp => {
-      markdown += `### ${ exp.company}\n`;
+      markdown += `### ${exp.company}\n`;
       markdown += `**${exp.position}**\n`;
       markdown += `_${new Date(exp.startDate).toLocaleDateString()} - ${exp.current ? new Date().toLocaleDateString() : new Date(exp.endDate).toLocaleDateString()}_\n`;
       markdown += `${exp.role}\n`;
