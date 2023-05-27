@@ -8,6 +8,7 @@ export interface UserInfo {
     firstName: string;
     lastName: string;
     resumeDocumentId: string;
+    email: string;
 }
 
 interface UserInfoStepProps {
@@ -47,14 +48,24 @@ export const UserInfoStep: React.FC<UserInfoStepProps> = ({
                     }
                 />
             </FormControl>
+            <FormControl id="email" mt={4}>
+                <FormLabel>Email</FormLabel>
+                <Input
+                    value={userInfo.email}
+                    type="email"
+                    onChange={(e) =>
+                        onChange({
+                            ...userInfo
+                            , email: e.target.value
+                        })
+                    }
+                />
+            </FormControl>
             <FormControl id="resume" mt={4}>
                 <FormLabel>Resume</FormLabel>
                 <Box maxH={"400px"} display='block' overflowY='scroll'>
-                    {fileDialog ? <ThumbnailGallery documents={getDocuments()} onClick={(documentId) => {
-                        setFileDialog(false)
-                        onChange({ ...userInfo, resumeDocumentId: documentId })
-                    }} /> :
-                        <ThumbnailPreview documentId={doc?.id ?? ""} documentName={doc?.documentName ?? ""} thumbnail={doc?.thumbnail} key={doc?.id} newTab />
+                    {fileDialog ? <ThumbnailGallery documents={getDocuments()}/> :
+                        <ThumbnailPreview documentId={doc?.id ?? ""} documentName={doc?.documentName ?? ""} thumbnail={doc?.thumbnail} key={doc?.id} disableLink/>
                     }
                 </Box>
             </FormControl>

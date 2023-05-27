@@ -51,3 +51,50 @@ export const toDateTime = (secs: number) => {
   t.setSeconds(secs);
   return t;
 };
+
+export async function postDataToNewJobSubmission(
+  data: {
+    email: string,
+    name: string,
+    jobLink: string,
+    resumefileName: string,
+    resumePdfFile: Blob,
+    additionalNotes: string
+  }): Promise<void> {
+  const apiUrl = '/api/new-job-submission'; // replace with your API url
+
+  try {
+    // Convert Blob to Base64
+    const fileBase64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(data.resumePdfFile);
+    });
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: data.email,
+        name: data.name,
+        jobLink: data.jobLink,
+        resumefileName: data.resumefileName,
+        resumePdfFile: fileBase64,
+        additionalNotes: data.additionalNotes
+      })
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.log(result.message);
+  } catch (error) {
+    console.error(`Error: ${error}`);
+  }
+}

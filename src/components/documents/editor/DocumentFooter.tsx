@@ -1,10 +1,9 @@
-import React from "react";
 import { Box, Button, Flex, useBoolean } from "@chakra-ui/react";
 import { saveAs } from 'file-saver';
-import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
 import { DeltaStatic } from 'quill';
-import { getPdfFileFromHtml } from "../../../utility/helpers";
+import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
 import utf8 from "utf8";
+import { getPdfFileFromHtml } from "../../../utility/helpers";
 
 export function DocumentFooter(props: {
     contents?: DeltaStatic;

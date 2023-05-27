@@ -1,24 +1,26 @@
-import { Box, Button, Flex, VStack, useToast } from "@chakra-ui/react";
+import { Box, Button, Flex, VStack } from "@chakra-ui/react";
 import { useState } from "react";
+import { useUser } from "../../../utils/useUser";
 import { Batch } from "./batchesDisplay";
 import { ConfirmationStep } from "./confirmationStep";
 import { JobRowData, JobTable } from "./jobTable";
 import { UserInfo, UserInfoStep } from "./userInfoStep";
 
 interface StepperProps {
-    submitBatch: (newBatch: Batch) => void
+    addNewJobs: (newBatch: Batch) => void
 }
 
 export function Stepper(props: StepperProps) {
     const [step, setStep] = useState(1);
+    const user = useUser();
+
     const [userInfo, setUserInfo] = useState<UserInfo>({
-        firstName: "",
-        lastName: "",
+        firstName: user.userDetails?.full_name?.split(" ").at(0) ?? "",
+        lastName: user.userDetails?.full_name?.split(" ").at(1) ?? "",
         resumeDocumentId: "",
+        email: user.user?.email ?? ""
     });
     const [jobs, setJobs] = useState<JobRowData[]>([]);
-
-    const toast = useToast();
 
     const onNextStep = () => {
         setStep((prevStep) => (prevStep < 3 ? prevStep + 1 : 1));
@@ -63,21 +65,16 @@ export function Stepper(props: StepperProps) {
                 {step > 1 && <Button onClick={onPreviousStep}>Previous</Button>}
                 {step === 3 ? <Button alignSelf={"flex-end"} colorScheme="blue" onClick={() => {
 
-                    props.submitBatch({
+                    props.addNewJobs({
                         jobs,
                         userInfo,
                         date: new Date()
                     })
 
-                    return toast({
-                        title: 'Automation request submitted!',
-                        description: 'Our systems will auto apply to these set of jobs, custom matching your resume to the job description.',
-                        status: 'success',
-                        duration: 5000,
-                        isClosable: true,
-                    })
                 }}>Submit jobs</Button> :
-                    <Button alignSelf={"flex-end"} colorScheme="blue" onClick={onNextStep}>Next</Button>}
+                    <Button alignSelf={"flex-end"} colorScheme="blue" onClick={() => {
+                        onNextStep()
+                    }}>Next</Button>}
             </Flex>
         </VStack>
     );

@@ -10,7 +10,8 @@ function ThumbnailPreview({
   documentId: string;
   documentName: string;
   onClick?: (documentId: string) => void;
-  newTab?: boolean
+  newTab?: boolean;
+  disableLink?: boolean;
 }) {
 
   const cardComponent = <Card
@@ -57,7 +58,7 @@ function ThumbnailPreview({
 
   return (
     <>
-      {rest?.onClick != undefined
+      {!rest.disableLink || rest?.onClick != undefined
         ? cardComponent
         : <Link isExternal={newTab} href={`/files/${encodeURIComponent(documentId)}`}>
           {cardComponent}
