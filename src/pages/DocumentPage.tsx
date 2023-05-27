@@ -1,6 +1,6 @@
 import { useToast } from "@chakra-ui/react";
 import { useSession } from "@supabase/auth-helpers-react";
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 import { useRouter } from "next/router";
 import { DeltaOperation, Delta as DeltaStatic } from "quill";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
@@ -8,14 +8,19 @@ import { useState } from "react";
 import { Quill } from "react-quill";
 import utf8 from "utf8";
 import AuthLogin from "../components/auth/auth";
-import { DocumentEditor, aiCommentState } from "../components/documents/editor/DocumentEditor";
+import {
+  DocumentEditor,
+  aiCommentState,
+} from "../components/documents/editor/DocumentEditor";
 import NavigationBar from "../components/sidebar/verticalSidebar";
 import WithSubnavigation from "../components/sidebar/horizontalNav";
-import { getHtmlFromDocFileLegacy, getPdfFileFromHtml } from "../utility/helpers";
-import { createNewDocument, getDocument } from "../utility/storageHelpers";
+import {
+  getHtmlFromDocFileLegacy,
+  getPdfFileFromHtml,
+} from "../utility/helpers";
+import { createNewDocument } from "../utility/storageHelpers";
 import NewResumeModal from "./ImportResumeDialog";
-import { Tabs } from '@chakra-ui/react';
-
+import { Tabs } from "@chakra-ui/react";
 
 const Delta = Quill.import("delta") as typeof DeltaStatic;
 
@@ -26,26 +31,25 @@ interface documentEditorPageProps {
   aiComments?: aiCommentState[];
   initialHtmlContent?: string;
   blank?: boolean;
-  hideNav?: boolean
+  hideNav?: boolean;
 }
 
 export default function DocumentPage(props: documentEditorPageProps) {
-
-  const [resumeHtml, setresumeHtml] = useState<string | undefined>(props.initialHtmlContent);
-  const [showUpload, setShowUpload] = useState(
-    props.blank
+  const [resumeHtml, setresumeHtml] = useState<string | undefined>(
+    props.initialHtmlContent
   );
-  console.log("heeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheeeheee");
-  
+  const [showUpload, setShowUpload] = useState(props.blank);
+  const [documentName, setDocumentName] = useState<string | undefined>(
+    props.documentName
+  );
 
-  const [documentId, setDocumentId] = useState<string>(props.documentId)
+  const [documentId, setDocumentId] = useState<string>(props.documentId);
   const [navHeight, setNavHeight] = useState();
+  const [lastModified, setLastModified] = useState<Date>();
 
-
-  const toast = useToast()
-  const session = useSession()
+  const toast = useToast();
+  const session = useSession();
   const router = useRouter();
-
 
   const onFileUpload = async (file: File) => {
     const fileType = file?.type;
@@ -55,7 +59,7 @@ export default function DocumentPage(props: documentEditorPageProps) {
     } else if (
       fileType == "application/msword" ||
       fileType ==
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       // convert to html use legacy until api is fixed
       getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
@@ -66,21 +70,19 @@ export default function DocumentPage(props: documentEditorPageProps) {
           createNewDocument({
             documentName: file.name,
             id: docId,
-            initialHtmlData: html
-          })
-
-
+            initialHtmlData: html,
+          });
         } else {
           toast({
-            title: 'Error converting file to html. ',
+            title: "Error converting file to html. ",
             description: `Try copy/paste.`,
-            status: 'error',
+            status: "error",
             duration: 5000,
             isClosable: true,
-          })
+          });
         }
 
-        router.push(`/files/${encodeURIComponent(docId)}`)
+        router.push(`/files/${encodeURIComponent(docId)}`);
       });
     }
   };
@@ -91,94 +93,62 @@ export default function DocumentPage(props: documentEditorPageProps) {
     createNewDocument({
       documentName: `Untitled Resume - ${docId}`,
       id: docId,
-      initialHtmlData: html
-    })
+      initialHtmlData: html,
+    });
 
-    router.push(`/files/${encodeURIComponent(docId)}`)
+    router.push(`/files/${encodeURIComponent(docId)}`);
   };
 
-  const docEditorComp = <DocumentEditor
-    key={documentId}
-    documentId={documentId}
-    initialDeltaStaticContent={typeof props.documentContent == typeof DeltaStatic ? props.documentContent as DeltaStatic : new Delta(props.documentContent as DeltaOperation[])}
-    documentHtml={resumeHtml}
-    documentName={props.documentName}
-    aiComments={props.aiComments}
-    navHeight={navHeight}
-  />
-  const handleChildHeightChange = (height : any) => {
+  const docEditorComp = (
+    <DocumentEditor
+      key={documentId}
+      documentId={documentId}
+      initialDeltaStaticContent={
+        typeof props.documentContent == typeof DeltaStatic
+          ? (props.documentContent as DeltaStatic)
+          : new Delta(props.documentContent as DeltaOperation[])
+      }
+      documentHtml={resumeHtml}
+      documentName={documentName}
+      aiComments={props.aiComments}
+      navHeight={navHeight}
+      lastModified={lastModified}
+      setLastModified={setLastModified}
+    />
+  );
+  const handleChildHeightChange = (height: any) => {
     // Do something with the height value
-    console.log('Child component height:', height);
     setNavHeight(height);
   };
 
-
   return (
-    <div className="App" style={{minHeight: "100%"}} >
+    <div className="App" style={{ minHeight: "100%" }}>
       <Tabs>
-      {showUpload && <NewResumeModal
-        isOpen={true}
-        onClose={() => { }}
-        onFileUpload={onFileUpload}
-        onCopyPaste={onLoadEditor} />}
+        {showUpload && (
+          <NewResumeModal
+            isOpen={true}
+            onClose={() => {}}
+            onFileUpload={onFileUpload}
+            onCopyPaste={onLoadEditor}
+          />
+        )}
 
-      {
-        props.hideNav ? 
-          docEditorComp
-          : 
-          // <NavigationBar
-          //   newDocumentOnClick={() => setShowUpload(true)}
-          //   pdfExportOnClick={() => {
-
-          //     const documentDelta = getDocument(documentId)?.content;
-
-          //     console.log((documentDelta?.ops?.length ?? 0) < 1, "del")
-
-          //     if ((documentDelta?.ops?.length ?? 0) < 1) {
-          //       toast({
-          //         title: 'Cannot export empty document',
-          //         description: `Start loading your resume and editing with our AI!`,
-          //         status: 'info',
-          //         duration: 3000,
-          //         isClosable: true,
-          //       })
-
-          //       return;
-
-          //     }
-
-          //     toast({
-          //       title: 'Exporting document to PDF.',
-          //       description: `Your file ${props.documentName} is exporting`,
-          //       status: 'loading',
-          //       duration: 1000,
-          //       isClosable: true,
-          //     })
-
-          //     const html: string = new QuillDeltaToHtmlConverter(documentDelta?.ops ?? [], {
-          //       inlineStyles: true
-          //     }).convert();
-
-          //     const html_encoded = utf8.encode(html)
-
-          //     getPdfFileFromHtml(html_encoded)
-          //       .then(blob => {
-          //         saveAs(blob, `${props.documentName}.pdf`);
-          //         toast({
-          //           title: `${props.documentName}.pdf successfully exported`,
-          //           description: "View the file in your downloads.",
-          //           status: 'success',
-          //           duration: 3000,
-          //           isClosable: true,
-          //         })
-          //       });
-          //   }}>
+        {
+          props.hideNav ? (
+            docEditorComp
+          ) : (
             <AuthLogin session={session} show={!showUpload}>
-              <WithSubnavigation onHeightChange={handleChildHeightChange} />
+              <WithSubnavigation
+                lastModified={lastModified}
+                onHeightChange={handleChildHeightChange}
+                documentName={documentName}
+                setDocumentName={setDocumentName}
+              />
               {docEditorComp}
             </AuthLogin>
+          )
           // </NavigationBar>
-      }
+        }
       </Tabs>
     </div>
   );

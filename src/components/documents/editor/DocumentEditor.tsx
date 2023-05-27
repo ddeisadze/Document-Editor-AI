@@ -1,14 +1,21 @@
 import { TabPanels, TabPanel, Flex } from "@chakra-ui/react";
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
-import { useCallback, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { Range } from "react-quill";
 import { useReadonly } from "../../../contexts";
 import { updateSpecificDocumentWithComments } from "../../../utility/storageHelpers";
 import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
-import DocumentTitle from "./DocumentTitle";
 import { QuillEditor } from "./QuillEditor";
 import debounce from "lodash/debounce";
+import { AiChat } from "../aicomment/AiChat";
+import styles from "./QuillEditor.module.css";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -36,18 +43,16 @@ interface DocumentEditorProps {
   isDemoView?: boolean;
   initialDeltaStaticContent?: DeltaStatic | undefined;
   navHeight?: string;
+  lastModified?: Date;
+  setLastModified: Dispatch<SetStateAction<Date | undefined>>;
 }
 
 export function DocumentEditor(props: DocumentEditorProps) {
   const commentWidth = "300px";
 
-  const [documentName, setDocumentName] = useState<string | undefined>(
-    props.documentName
-  );
   const [aiComments, setAiComments] = useState<aiCommentState[]>(
     props.aiComments ?? []
   );
-  const [lastModified, setLastModified] = useState<Date>();
   const [content, setContent] = useState<DeltaStatic>();
 
   const readonlyContext = useReadonly();
@@ -58,7 +63,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
   useEffect(() => {
     if (props.initialDeltaStaticContent) {
-      console.log(props.initialDeltaStaticContent, "ssss");
       setContent(props.initialDeltaStaticContent);
     }
   }, [props.initialDeltaStaticContent]);
@@ -117,8 +121,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
   const handleContentChange = useCallback(
     debounce((value) => {
       setContent(value);
-      setLastModified(new Date());
-      console.log("User stopped typing. Value:", value);
+      props.setLastModified(new Date());
       // Perform any other actions you want to take when the user stops typing
     }, 500),
     []
@@ -135,8 +138,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
   const handleOnAiUpdatedPrompt = useCallback(
     (editedText: string, range?: Range) => {
-      console.log("attrs", editedText, range, content);
-
       if (!editedText || !range || !content) {
         return;
       }
@@ -148,8 +149,6 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
       // Get the attributes for the range
       const attributes = rangeDelta?.ops?.at(0)?.attributes ?? {};
-
-      console.log("attrs", attributes["commentLink"]);
 
       //#todo: we need to update range here also when there are changes made to range from editor
       const updateDelta = content.compose(
@@ -194,6 +193,21 @@ export function DocumentEditor(props: DocumentEditorProps) {
       return newList;
     });
   };
+
+  const [generalChatMessages, setGeneralChatMessages] = useState<MessageModel[]>([]);
+
+  useEffect(() => {
+    // Load the general chat messages from local storage
+    const savedMessages = localStorage.getItem("generalChatMessages");
+    if (savedMessages) {
+      setGeneralChatMessages(JSON.parse(savedMessages));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Update local storage whenever there is an update to general chat messages
+    localStorage.setItem("generalChatMessages", JSON.stringify(generalChatMessages));
+  }, [generalChatMessages]);
 
   const chatComponents = aiComments.map((aiComment) => (
     <AiCommentManager
@@ -246,22 +260,23 @@ export function DocumentEditor(props: DocumentEditorProps) {
     />
   ));
 
-  console.table(chatComponents);
-
   return (
     <>
-      <Flex flexDirection={"row"}>
+      <Flex flexDirection={"row"} basis={"auto"}>
         <QuillEditor
           documentId={props.documentId}
           initialHtmlData={props.documentHtml}
           onContentChange={handleContentChange}
           onAddComment={addAiConvo}
           content={content}
-          documentName={documentName}
+          documentName={props.documentName}
           navHeight={props.navHeight}
         />
-        
-        <TabPanelsComponent chatComponents={chatComponents} />
+
+        <TabPanelsComponent chatComponents={chatComponents} 
+          generalChatMessages={generalChatMessages}
+          onGeneralChatMessage={(message) => setGeneralChatMessages((prevMessages) => [...prevMessages, message])}
+        />/>
       </Flex>
     </>
   );
@@ -269,12 +284,12 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
 const TabPanelsComponent = (props: { chatComponents: JSX.Element[] }) => {
   return (
-    <TabPanels>
+    <TabPanels minWidth={"30%"} className={styles.chatTab}>
       <TabPanel>
-        <div className="yoo">{props.chatComponents}</div>
+        <div className="">{props.chatComponents}</div>
       </TabPanel>
-      <TabPanel>
-        <p>two!</p>
+      <TabPanel padding={0} height={"100%"}>
+        <AiChat width={"100%"} height={"100%"} miniChat={true} />
       </TabPanel>
     </TabPanels>
   );

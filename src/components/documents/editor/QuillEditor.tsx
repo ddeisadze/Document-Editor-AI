@@ -12,6 +12,8 @@ import {
 import { SelectedText } from "./DocumentEditor";
 import styles from "./QuillEditor.module.css";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
+import Head from 'next/head';
+
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -97,8 +99,6 @@ class CommentLinkBlot extends Quill.import("blots/inline") {
 
 Quill.register(CommentLinkBlot);
 
-
-
 interface quillEditorProps {
   onContentChange?: (value: DeltaStatic) => void;
   onAddComment?: (
@@ -115,22 +115,23 @@ interface quillEditorProps {
 const modules = {
   toolbar: {
     container: "#toolbar",
+  },
+  history: {
+    delay: 2000,
+    maxStack: 500,
+    userOnly: true
   }
   // [
   //   [{ header: [1, 2, 3, 4, 5, 6, false] }],
   //   ["bold", "italic", "underline"],
   //   [{ align: [] }],
   //   [{ list: "ordered" }, { list: "bullet" }],
-  //   ["link"], 
-  //   [{ header: 1, styles: { height: "150px" } }]  
+  //   ["link"],
+  //   [{ header: 1, styles: { height: "150px" } }]
   // ],
-  
 
   // typingBounds: true,
-
-  
 };
-
 
 const formats = [
   "header",
@@ -157,29 +158,29 @@ export function QuillEditor(props: quillEditorProps) {
   if (props.navHeight) {
     navHeight = parseInt(props.navHeight) + 1;
     docEditorTopPosition = navHeight + 1;
-    docEditorTopPosition.toString()
-    navHeight = navHeight.toString()
+    docEditorTopPosition.toString();
+    navHeight = navHeight.toString();
   }
   const toolbarDivRef = React.useRef(null);
 
   const documentAnalyzers = [];
 
-//   const toolbarStyles = `
-//   .ql-toolbar {
-//     height: 50px;
-//     position: absolute !important;
-//     top: ${navHeight}px !important;
-//     width: 100vw;
-//     background-color: #ffffff !important;
-//         // Specify the desired height here
-//     /* Add other styling properties as needed */
-//   }
-// `;
+  //   const toolbarStyles = `
+  //   .ql-toolbar {
+  //     height: 50px;
+  //     position: absolute !important;
+  //     top: ${navHeight}px !important;
+  //     width: 100vw;
+  //     background-color: #ffffff !important;
+  //         // Specify the desired height here
+  //     /* Add other styling properties as needed */
+  //   }
+  // `;
 
-// // Apply the CSS styles to the document
-// const styleElement = document.createElement("style");
-// styleElement.innerHTML = toolbarStyles;
-// document.head.appendChild(styleElement);
+  // // Apply the CSS styles to the document
+  // const styleElement = document.createElement("style");
+  // styleElement.innerHTML = toolbarStyles;
+  // document.head.appendChild(styleElement);
 
   useOutsideClick({
     ref: toolbarDivRef,
@@ -247,11 +248,7 @@ export function QuillEditor(props: quillEditorProps) {
   };
 
   useEffect(() => {
-    console.log("rerendering for document name");
-
     if (quillRef.current) {
-      console.log("rerendering for document name in body", props.documentName);
-
       const editorNode = quillRef.current.getEditor().root;
       const width = editorNode.clientWidth;
       const height = editorNode.clientHeight / 2;
@@ -260,8 +257,6 @@ export function QuillEditor(props: quillEditorProps) {
         const documentName = props.documentName;
 
         updateDocuments((document: documentStored) => {
-          // console.log(document, 'yoooo');
-
           if (document && document.id === props.documentId) {
             document.thumbnail = dataUrl;
             if (
@@ -275,18 +270,19 @@ export function QuillEditor(props: quillEditorProps) {
             document.content = quillRef?.current?.editor?.getContents();
           }
 
-          // }
-          // console.log( document.documentName, "hey there", props.documentName);
-
           return document;
         });
       });
     }
   }, [props.content, props.documentName]);
-  
 
   return (
     <>
+          <Head>
+
+    
+            <link rel="stylesheet" href="../../public/quill.css" />
+            </Head>
 
       <ReactQuill
         style={{
@@ -294,14 +290,12 @@ export function QuillEditor(props: quillEditorProps) {
           height: "100vh",
           minWidth: "50%",
           overflow: "hidden",
-          borderRight: "1px solid #e5e7eb",
         }}
         placeholder="Copy paste resume from Google Drive or any file here...."
-        className={"container"}
+        className={styles.quillContainer}
         ref={quillRef}
         value={props.content ?? props.initialHtmlData ?? ""}
         onChange={handleChange}
-       
         modules={modules}
         formats={formats}
         onChangeSelection={
@@ -378,4 +372,3 @@ export function QuillEditor(props: quillEditorProps) {
     </>
   );
 }
-

@@ -11,6 +11,7 @@ interface Props {
     typingIndicator: boolean;
     messages?: Message[];
     top?: number | string;
+    miniChat?: boolean;
 
     footerComponent?: ReactElement
     headerComponent?: ReactElement
@@ -75,9 +76,10 @@ const CommentDialog = ({ onMessageSend: onSubmit, typingIndicator, messages = []
                 zIndex: 200
             }}
             backgroundColor='white'
-            borderWidth="1px"
-            borderRadius="md"
+            borderWidth={props.miniChat ? "none" : "1px"}
+            borderRadius={props.miniChat ? "none" : "md"}
             minHeight="300px"
+            height={props.height ?? "300px"}
             maxHeight={props.height ?? "300px"}
             maxWidth={props.width}
             top={props.top}

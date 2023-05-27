@@ -5,7 +5,6 @@ import { DeltaStatic, Delta as DeltaType } from 'quill';
 
 import { Button, Grid, GridItem, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Stack } from '@chakra-ui/react';
 import { diffLines, diffSentences, diffWords } from 'diff';
-import 'node_modules/react-quill/dist/quill.snow.css';
 import { AiChat, MessageModel } from '../aicomment/AiChat';
 
 interface DiffViewerProps {

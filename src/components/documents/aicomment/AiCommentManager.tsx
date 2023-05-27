@@ -81,6 +81,7 @@ export function AiCommentManager(props: aiChatManagerProps) {
             aria-label="Search database"
             colorScheme={"blackAlpha"}
             icon={<ChatIcon onClick={() => setIsOpen(!isOpen)} />}
+            // padding={'11px 0 11px 0'}
         />;
 
     return <>
@@ -89,7 +90,6 @@ export function AiCommentManager(props: aiChatManagerProps) {
         {isDiffOpen && <DiffViewer
             onAcceptChanges={(updatedText: string) => props.handleUpdatePrompt?.call({}, updatedText, props.range)}
             onClose={(aiMessagesOutside) => {
-                console.log(aiMessagesOutside, "asdassdsad")
                 if (aiMessagesOutside && aiMessagesOutside.length > 0) {
                     setAiMessages(aiMessagesOutside);
                 }

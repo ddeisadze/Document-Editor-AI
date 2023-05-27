@@ -5,3 +5,21 @@
     display: inline;
     position: relative;
 }
+
+@media only screen and (max-width: 768px) { 
+    .quillContainer {
+        flex: 1
+    }
+    .chatTab {
+        flex: 1
+    }
+  }
+  @media only screen and (min-width: 768px) { 
+    .quillContainer {
+        flex: 2
+    }
+    .chatTab {
+        flex: 1
+    }
+  }
+.quillContainer { background-color: black;}

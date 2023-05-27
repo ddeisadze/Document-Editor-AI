@@ -34,15 +34,16 @@ export function AiChat(props: {
   handleUpdatePrompt?: (updatedText: string, range?: Range) => void | undefined;
   onNewMessage?: (messages: MessageModel[]) => void;
   messages?: MessageModel[];
-
+  miniChat?: boolean;
   footerComponent?: ReactElement;
   headerComponent?: ReactElement;
 
   top?: string | number;
 
   range?: Range;
-  selectedText: string;
+  selectedText?: string;
   width: string;
+  height?: string;
 }) {
   const openAiDefaultValue: ChatCompletionRequestMessage[] = [
     {
@@ -157,13 +158,16 @@ export function AiChat(props: {
 
   return (
     <>
-      <CommentDialog
+    <div className="" style={{height: props.height}}>
+    <CommentDialog
         footerComponent={props.footerComponent}
         headerComponent={props.headerComponent}
+        miniChat={props.miniChat}
         onMessageSend={(comment) => handleMessageSend(comment)}
         width={props.width}
         messages={messagesToDialog}
         top={props.top}
+        height={props.height}
         messageReactionButtons={[
           returnAiRecs(
             chatState[chatState.length - 1]?.message?.toLowerCase()
@@ -186,6 +190,8 @@ export function AiChat(props: {
         ]}
         typingIndicator={openAiLoading}
       />
+    </div>
+      
     </>
   );
 }

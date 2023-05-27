@@ -1,0 +1,12 @@
+.back-btn {
+    will-change: transform;
+    transition: transform 450ms;
+  }
+  
+  .back-btn:hover {
+    transition: transform 150ms;
+    transform: translateX(-3px);
+  }
+
+  
+  

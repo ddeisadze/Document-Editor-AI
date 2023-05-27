@@ -36,7 +36,6 @@ export const createNewDocument = (doc: createNewDocument) => {
 }
 
 export const getDocuments = (): documentStored[] => {
-    console.log(localStorage)
     const documentsString = localStorage.getItem("documents");
     const documents: documentStored[] = documentsString
         ? JSON.parse(documentsString)

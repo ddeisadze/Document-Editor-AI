@@ -5,8 +5,12 @@ import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { Analytics } from '@vercel/analytics/react';
 import type { AppProps } from 'next/app';
 import { useState } from 'react';
+import 'node_modules/react-quill/dist/quill.snow.css';
+
 import '../styles/global.css';
 import { MyUserContextProvider } from '../utils/useUser';
+import "public/quill.css"
+
 
 export default function App({ Component, pageProps }: AppProps) {
 
@@ -32,9 +36,15 @@ export default function App({ Component, pageProps }: AppProps) {
               900: "#1a202c",
             },
           },
+        fonts: {
+        heading: `'system-ui','-apple-system','Segoe UI','Open Sans', 'sans-serif'`,
+        quill: `'Inter var', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif`,
+        body: `'-apple-system', 'system-ui','Segoe UI','Open Sans', sans-serif`,
+        },
     });
 
     const [supabase] = useState(() => createBrowserSupabaseClient())
+
 
     return <>
         <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
