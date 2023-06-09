@@ -1,4 +1,6 @@
 import mammoth from "mammoth";
+import TurndownService from "turndown";
+
 
 export async function getHtmlFromDocxUrlApi(fileUrl: string): Promise<string> {
 	const resumeBlob = await fetch(fileUrl)
@@ -7,17 +9,22 @@ export async function getHtmlFromDocxUrlApi(fileUrl: string): Promise<string> {
 	return getHtmlFromFileApi(resumeBlob);
 }
 
-export async function getHtmlFromDocFileLegacy(buffer: ArrayBuffer) {
-	const html = await mammoth
-		.convertToHtml({ arrayBuffer: buffer })
-		.then(function (result) {
-			var html = result.value;
-			return html;
-		})
-		.catch((err) => console.log("error", err));
-
-	return html ?? null;
-}
+export async function getMarkdownFromDocFile(buffer: ArrayBuffer) {
+	const html = await mammoth.convertToHtml({ arrayBuffer: buffer })
+	  .then((result) => result.value)
+	  .catch((err) => {
+		console.log("Error converting to HTML:", err);
+		return null;
+	  });
+  
+	if (html) {
+	  const turndownService = new TurndownService();
+	  const markdown = turndownService.turndown(html);
+	  return markdown;
+	}
+  
+	return null;
+  }
 
 function getHtmlFromFileApi(fileBlob: Blob) {
 	const form = new FormData();

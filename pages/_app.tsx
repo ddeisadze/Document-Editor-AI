@@ -4,7 +4,7 @@ import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { Analytics } from '@vercel/analytics/react';
 import type { AppProps } from 'next/app';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import 'node_modules/react-quill/dist/quill.snow.css';
 
 import '../styles/global.css';
@@ -42,6 +42,19 @@ export default function App({ Component, pageProps }: AppProps) {
         body: `'-apple-system', 'system-ui','Segoe UI','Open Sans', sans-serif`,
         },
     });
+
+    useEffect(() => {
+        // Check if you are on the specific page where you want to modify the __next id
+        const isSpecificPage = window.location.pathname === '/files';
+        console.log("yooooo");
+        
+      
+        if (isSpecificPage) {
+          const nextDiv = document.getElementById('__next');
+          // Modify the id attribute
+          nextDiv?.setAttribute('id', 'custom__next');
+        }
+      }, []);
 
     const [supabase] = useState(() => createBrowserSupabaseClient())
 

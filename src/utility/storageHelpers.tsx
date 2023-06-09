@@ -1,67 +1,85 @@
 import { Delta as DeltaStatic } from "quill";
 import { Batch } from "../components/automation/batchesDisplay";
 import { aiCommentState } from "../components/documents/editor/DocumentEditor";
+import { SetStateAction, useAtomValue, useSetAtom} from 'jotai';
+import { documentsAtom, documentAtom, aiChatsAtom } from "../store/atoms/documentsAtom";
+import { DocumentProps, aiChatProps } from "../store/types";
+import { NextRouter } from "next/router";
+
+
+
 
 interface createNewDocument {
-    id: string,
     content?: DeltaStatic,
     documentName: string,
-    initialHtmlData?: string,
-    aiComments?: aiCommentState[]
+    aiChats?: aiChatProps[]
 }
 
-export interface documentStored {
-    id: string,
-    content?: DeltaStatic,
-    documentName: string,
-    initialHtmlData?: string,
-    thumbnail?: string,
-    aiComments: aiCommentState[]
-}
+// export interface documentStored {
+//     id: string,
+//     content?: DeltaStatic,
+//     documentName: string,
+//     initialHtmlData?: string,
+//     thumbnail?: string,
+//     aiComments: aiCommentState[]
+// }
 
-export const createNewDocument = (doc: createNewDocument) => {
-    const documentsFromLocalStorage = localStorage.getItem("documents");
+export const CreateNewDocument = (doc : DocumentProps, setDocumentAtom : any, aiChats : aiChatProps[], setDocumentId: any, router : NextRouter) => {
+    const date = new Date().getTime().toString()
+    setDocumentId(date)
 
-    const existingDocuments: documentStored[] = documentsFromLocalStorage ? JSON.parse(documentsFromLocalStorage) : [];
 
-    existingDocuments.push({
-        id: doc.id,
-        content: doc.content,
-        documentName: doc.documentName,
-        initialHtmlData: doc.initialHtmlData,
-        aiComments: doc.aiComments ?? []
-    });
+  
+    const documentsFromLocalStorage = localStorage.getItem('documents');
+  
+    const existingDocuments = documentsFromLocalStorage ? JSON.parse(documentsFromLocalStorage) : [];
+    console.log(doc.content, 'content');
+  
+    const newDocument = {
+      id: date,
+      content: doc.content,
+      documentName: doc.documentName,
+      aiChats: doc.aiChats ?? aiChats,
+    };
+  
+    existingDocuments.push(newDocument);
+  
+    setDocumentAtom(newDocument);
+  
+    localStorage.setItem('documents', JSON.stringify(existingDocuments));
 
-    localStorage.setItem("documents", JSON.stringify(existingDocuments));
-}
+        router.push(`/files/${encodeURIComponent(date)}`);
 
-export const getDocuments = (): documentStored[] => {
+  };
+
+
+export const getDocuments = (): DocumentProps[] => {
     const documentsString = localStorage.getItem("documents");
-    const documents: documentStored[] = documentsString
+    const documents: DocumentProps[] = documentsString
         ? JSON.parse(documentsString)
         : [];
 
     return documents;
 }
 
-export const getDocument = (id: string): documentStored | undefined => {
+export const getDocument = (id: string): DocumentProps | undefined => {
     const docs = getDocuments();
     return docs.find(doc => doc?.id == id);
 }
 
-export const updateDocuments = (mapFn: (doc: documentStored) => documentStored) => {
-    const existingDocuments: documentStored[] = getDocuments();
+export const updateDocuments = (mapFn: (doc: DocumentProps) => DocumentProps) => {
+    const existingDocuments: DocumentProps[] = getDocuments();
     const updatedDocuments = existingDocuments.map(mapFn);
     localStorage.setItem("documents", JSON.stringify(updatedDocuments));
 }
 
-export const updateSpecificDocumentWithComments = (id: string, aiComments: aiCommentState[]) => {
-    const existingDocuments: documentStored[] = getDocuments();
+export const updateSpecificDocumentWithComments = (id: string, aiChats: aiChatProps[]) => {
+    const existingDocuments: DocumentProps[] = getDocuments();
 
     const docToUpdate = existingDocuments.findIndex(doc => doc?.id === id)
 
-    if (docToUpdate > -1 && aiComments) {
-        existingDocuments[docToUpdate].aiComments = aiComments
+    if (docToUpdate > -1 && aiChats) {
+        existingDocuments[docToUpdate].aiChats = aiChats
     }
 
     localStorage.setItem("documents", JSON.stringify(existingDocuments));

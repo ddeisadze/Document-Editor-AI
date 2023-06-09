@@ -28,23 +28,23 @@ export default function WithSubnavigation(props: any) {
 
   const ref = useRef(null);
 
-  useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const { height } = entry.contentRect;
-        props.onHeightChange(height);
-      }
-    });
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+  // useEffect(() => {
+  //   const observer = new ResizeObserver((entries) => {
+  //     for (let entry of entries) {
+  //       const { height } = entry.contentRect;
+  //       props.onHeightChange(height);
+  //     }
+  //   });
+  //   if (ref.current) {
+  //     observer.observe(ref.current);
+  //   }
 
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref?.current);
-      }
-    };
-  }, [props.onHeightChange]);
+  //   return () => {
+  //     if (ref.current) {
+  //       observer.unobserve(ref?.current);
+  //     }
+  //   };
+  // }, [props.onHeightChange]);
 
   return (
     <Box ref={ref}>

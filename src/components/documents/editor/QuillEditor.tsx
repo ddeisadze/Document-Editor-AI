@@ -1,19 +1,25 @@
 import { useOutsideClick } from "@chakra-ui/react";
 import html2canvas from "html2canvas";
-import { DeltaStatic, Delta as DeltaType } from "quill";
-import React, { useEffect, useState } from "react";
+import { Delta as DeltaType } from "quill";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactQuill, { Quill, Range } from "react-quill";
 import { useReadonly } from "../../../contexts";
 import openai from "../../../pages/openai";
-import {
-  documentStored,
-  updateDocuments,
-} from "../../../utility/storageHelpers";
+import { updateDocuments } from "../../../utility/storageHelpers";
 import { SelectedText } from "./DocumentEditor";
 import styles from "./QuillEditor.module.css";
 import InlineToolbar from "./inlineToolbar/InlineToolbar";
-import Head from 'next/head';
-
+import Head from "next/head";
+import {
+  documentIdAtom,
+  documentNameAtom,
+  aiChatsAtom,
+  contentAtom,
+  lastModifiedAtom,
+} from "../../../store/atoms/documentsAtom";
+import { DocumentProps } from "../../../store/types";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import debounce from "lodash/debounce";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
@@ -98,20 +104,6 @@ class CommentLinkBlot extends Quill.import("blots/inline") {
 }
 
 Quill.register(CommentLinkBlot);
-
-interface quillEditorProps {
-  onContentChange?: (value: DeltaStatic) => void;
-  onAddComment?: (
-    commentId: string,
-    range: Range,
-    selectedAttrs: SelectedText
-  ) => void;
-  initialHtmlData?: string | null;
-  content?: DeltaStatic;
-  documentName?: string | undefined;
-  documentId: string;
-  navHeight?: string;
-}
 const modules = {
   toolbar: {
     container: "#toolbar",
@@ -119,19 +111,11 @@ const modules = {
   history: {
     delay: 2000,
     maxStack: 500,
-    userOnly: true
-  }
-  // [
-  //   [{ header: [1, 2, 3, 4, 5, 6, false] }],
-  //   ["bold", "italic", "underline"],
-  //   [{ align: [] }],
-  //   [{ list: "ordered" }, { list: "bullet" }],
-  //   ["link"],
-  //   [{ header: 1, styles: { height: "150px" } }]
-  // ],
-
-  // typingBounds: true,
+    userOnly: true,
+  },
 };
+
+// const Delta = Quill.import("delta") as typeof DeltaStatic;
 
 const formats = [
   "header",
@@ -149,38 +133,62 @@ const formats = [
   "commentLink",
 ];
 
-export function QuillEditor(props: quillEditorProps) {
+export function QuillEditor() {
   const [showInlineToolbar, setShowInlineToolbar] =
     useState<JSX.Element | null>(null);
   const quillRef = React.useRef<ReactQuill>(null);
-  let navHeight = null;
-  let docEditorTopPosition = null;
-  if (props.navHeight) {
-    navHeight = parseInt(props.navHeight) + 1;
-    docEditorTopPosition = navHeight + 1;
-    docEditorTopPosition.toString();
-    navHeight = navHeight.toString();
-  }
   const toolbarDivRef = React.useRef(null);
 
-  const documentAnalyzers = [];
+  const documentId = useAtomValue(documentIdAtom);
+  const documentName = useAtomValue(documentNameAtom);
+  const setAiChats = useSetAtom(aiChatsAtom);
+  const [content, setContent] = useAtom(contentAtom);
+  const setLastModified = useSetAtom(lastModifiedAtom);
 
-  //   const toolbarStyles = `
-  //   .ql-toolbar {
-  //     height: 50px;
-  //     position: absolute !important;
-  //     top: ${navHeight}px !important;
-  //     width: 100vw;
-  //     background-color: #ffffff !important;
-  //         // Specify the desired height here
-  //     /* Add other styling properties as needed */
-  //   }
-  // `;
+  const handleContentChange = useCallback(
+    debounce((value) => {
+      setContent(value);
+      setLastModified(new Date());
+      // Perform any other actions you want to take when the user stops typing
+    }, 500),
+    []
+  );
 
-  // // Apply the CSS styles to the document
-  // const styleElement = document.createElement("style");
-  // styleElement.innerHTML = toolbarStyles;
-  // document.head.appendChild(styleElement);
+  const commentWidth = "300px";
+
+  const addAiConvo = (
+    commentId: string,
+    range: Range,
+    selectedAttrs: SelectedText
+  ) => {
+    setAiChats((prevState) => {
+      const oldVals = prevState.map((c) => ({
+        ...c,
+        isOpen: false,
+      }));
+      if (range instanceof Range) {
+        const newList = [
+          ...oldVals,
+          {
+            id: commentId,
+            range: range,
+            top: selectedAttrs.top,
+            bottom: selectedAttrs.bottom,
+            left: selectedAttrs.left,
+            right: selectedAttrs.right,
+            selectedText: selectedAttrs.text,
+            width: commentWidth,
+            isOpen: true,
+            messageHistory: [],
+          },
+        ];
+
+        return newList;
+      } else {
+        return [...oldVals];
+      }
+    });
+  };
 
   useOutsideClick({
     ref: toolbarDivRef,
@@ -192,8 +200,8 @@ export function QuillEditor(props: quillEditorProps) {
   const readonlyContext = useReadonly();
 
   const handleChange = (): void => {
-    if (quillRef.current?.editor && props.onContentChange) {
-      props.onContentChange(quillRef.current.editor.getContents());
+    if (quillRef.current?.editor) {
+      handleContentChange(quillRef.current.editor.getContents());
     }
   };
 
@@ -211,7 +219,7 @@ export function QuillEditor(props: quillEditorProps) {
       quillRef?.current?.editor?.updateContents(ops);
     }
 
-    props?.onAddComment?.call({}, commentId.toString(), range, selectedAttrs);
+    addAiConvo.call({}, commentId.toString(), range, selectedAttrs);
 
     setShowInlineToolbar(null);
   };
@@ -254,17 +262,16 @@ export function QuillEditor(props: quillEditorProps) {
       const height = editorNode.clientHeight / 2;
       html2canvas(editorNode, { width, height }).then((canvas) => {
         const dataUrl = canvas.toDataURL();
-        const documentName = props.documentName;
 
-        updateDocuments((document: documentStored) => {
-          if (document && document.id === props.documentId) {
+        updateDocuments((document: DocumentProps) => {
+          if (document && document.id === documentId) {
             document.thumbnail = dataUrl;
             if (
               document.documentName &&
-              props.documentName &&
-              document.documentName != props.documentName
+              documentName &&
+              document.documentName != documentName
             ) {
-              document.documentName = props.documentName;
+              document.documentName = documentName;
             }
 
             document.content = quillRef?.current?.editor?.getContents();
@@ -274,15 +281,13 @@ export function QuillEditor(props: quillEditorProps) {
         });
       });
     }
-  }, [props.content, props.documentName]);
+  }, [content, documentName]);
 
   return (
     <>
-          <Head>
-
-    
-            <link rel="stylesheet" href="../../public/quill.css" />
-            </Head>
+      <Head>
+        <link rel="stylesheet" href="../../public/quill.css" />
+      </Head>
 
       <ReactQuill
         style={{
@@ -294,7 +299,7 @@ export function QuillEditor(props: quillEditorProps) {
         placeholder="Copy paste resume from Google Drive or any file here...."
         className={styles.quillContainer}
         ref={quillRef}
-        value={props.content ?? props.initialHtmlData ?? ""}
+        value={content ?? ""}
         onChange={handleChange}
         modules={modules}
         formats={formats}

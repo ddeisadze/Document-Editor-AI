@@ -1,71 +1,34 @@
 import { TabPanels, TabPanel, Flex } from "@chakra-ui/react";
-import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import Quill, { Delta as DeltaType } from "quill";
+import { useCallback, useEffect } from "react";
 import { Range } from "react-quill";
 import { useReadonly } from "../../../contexts";
 import { updateSpecificDocumentWithComments } from "../../../utility/storageHelpers";
-import { MessageModel } from "../aicomment/AiChat";
 import { AiCommentManager } from "../aicomment/AiCommentManager";
 import { QuillEditor } from "./QuillEditor";
-import debounce from "lodash/debounce";
 import { AiChat } from "../aicomment/AiChat";
 import styles from "./QuillEditor.module.css";
+import {
+  documentIdAtom,
+  aiChatsAtom,
+  contentAtom,
+} from "../../../store/atoms/documentsAtom";
+import { useAtom, useAtomValue } from "jotai";
 
 const Delta = Quill.import("delta") as typeof DeltaType;
 
-export interface aiCommentState {
-  id: string;
-  isOpen: boolean;
-  range: Range;
-
-  selectedText: string;
-
-  top?: Number | undefined;
-  bottom?: Number | undefined;
-  left?: Number | undefined;
-  right?: Number | undefined;
-  width: string;
-
-  messageHistory: MessageModel[];
-}
-
-interface DocumentEditorProps {
-  documentHtml?: string;
-  documentName: string | undefined;
-  documentId: string;
-  aiComments?: aiCommentState[];
-  isDemoView?: boolean;
-  initialDeltaStaticContent?: DeltaStatic | undefined;
-  navHeight?: string;
-  lastModified?: Date;
-  setLastModified: Dispatch<SetStateAction<Date | undefined>>;
-}
-
-export function DocumentEditor(props: DocumentEditorProps) {
+export function DocumentEditor() {
   const commentWidth = "300px";
 
-  const [aiComments, setAiComments] = useState<aiCommentState[]>(
-    props.aiComments ?? []
-  );
-  const [content, setContent] = useState<DeltaStatic>();
+  const documentId = useAtomValue(documentIdAtom);
+  const [aiChats, setAiChats] = useAtom(aiChatsAtom);
+  const [content, setContent] = useAtom(contentAtom);
 
   const readonlyContext = useReadonly();
 
   useEffect(() => {
-    updateSpecificDocumentWithComments(props.documentId, aiComments);
-  }, [aiComments]);
-
-  useEffect(() => {
-    if (props.initialDeltaStaticContent) {
-      setContent(props.initialDeltaStaticContent);
-    }
-  }, [props.initialDeltaStaticContent]);
+    updateSpecificDocumentWithComments(documentId, aiChats);
+  }, [aiChats]);
 
   useEffect(() => {
     window.addEventListener("click", (e) => {
@@ -73,7 +36,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
       const commentId = target.getAttribute("commentId");
 
       if (target.tagName.toLowerCase() === "comment-link" && commentId) {
-        setAiComments((prevState) =>
+        setAiChats((prevState) =>
           prevState.map((p) => {
             if (p.id === commentId.trim()) {
               p.isOpen = true;
@@ -88,7 +51,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
     });
 
     if (readonlyContext.showComments) {
-      setAiComments((prevState) =>
+      setAiChats((prevState) =>
         prevState.map((p, i) => {
           if (i == 0) {
             p.isOpen = true;
@@ -103,7 +66,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
   }, []);
 
   const removeAiConvo = (key: string, range: Range) => {
-    setAiComments((prev) => {
+    setAiChats((prev) => {
       return prev.filter((i) => i.id != key);
     });
 
@@ -114,24 +77,12 @@ export function DocumentEditor(props: DocumentEditorProps) {
     const updateDelta = content?.compose(
       new Delta().retain(range.index).retain(range.length, { background: {} })
     );
-
-    setContent(updateDelta);
+    if (updateDelta) {
+      setContent(updateDelta);
+    }
   };
 
-  const handleContentChange = useCallback(
-    debounce((value) => {
-      setContent(value);
-      props.setLastModified(new Date());
-      // Perform any other actions you want to take when the user stops typing
-    }, 500),
-    []
-  );
-  // const handleContentChange = (value: DeltaStatic) => {
-
-  //     setContent(value);
-  //     setLastModified(new Date());
-
-  //     // #TODO: if content is part of comment-link,  update what we pass to diff viewer
+  // #TODO: if content is part of comment-link,  update what we pass to diff viewer
   // };
 
   // #TODO: if content is part of comment-link,  update what we pass to diff viewer
@@ -163,64 +114,33 @@ export function DocumentEditor(props: DocumentEditorProps) {
     [content]
   );
 
-  const addAiConvo = (
-    commentId: string,
-    range: Range,
-    selectedAttrs: SelectedText
-  ) => {
-    setAiComments((prevState) => {
-      const oldVals = prevState.map((c) => ({
-        ...c,
-        isOpen: false,
-      }));
+  // const [generalChatMessages, setGeneralChatMessages] = useState<MessageModel[]>([]);
 
-      const newList = [
-        ...oldVals,
-        {
-          id: commentId,
-          range: range,
-          top: selectedAttrs.top,
-          bottom: selectedAttrs.bottom,
-          left: selectedAttrs.left,
-          right: selectedAttrs.right,
-          selectedText: selectedAttrs.text,
-          width: commentWidth,
-          isOpen: true,
-          messageHistory: [],
-        },
-      ];
+  // useEffect(() => {
+  //   // Load the general chat messages from local storage
+  //   const savedMessages = localStorage.getItem("generalChatMessages");
+  //   if (savedMessages) {
+  //     setGeneralChatMessages(JSON.parse(savedMessages));
+  //   }
+  // }, []);
 
-      return newList;
-    });
-  };
+  // useEffect(() => {
+  //   // Update local storage whenever there is an update to general chat messages
+  //   localStorage.setItem("generalChatMessages", JSON.stringify(generalChatMessages));
+  // }, [generalChatMessages]);
 
-  const [generalChatMessages, setGeneralChatMessages] = useState<MessageModel[]>([]);
-
-  useEffect(() => {
-    // Load the general chat messages from local storage
-    const savedMessages = localStorage.getItem("generalChatMessages");
-    if (savedMessages) {
-      setGeneralChatMessages(JSON.parse(savedMessages));
-    }
-  }, []);
-
-  useEffect(() => {
-    // Update local storage whenever there is an update to general chat messages
-    localStorage.setItem("generalChatMessages", JSON.stringify(generalChatMessages));
-  }, [generalChatMessages]);
-
-  const chatComponents = aiComments.map((aiComment) => (
+  const chatComponents = aiChats.map((aiChat) => (
     <AiCommentManager
-      commentId={aiComment.id}
+      commentId={aiChat.id}
       width={commentWidth}
-      range={aiComment.range}
+      range={aiChat.range}
       handleUpdatePrompt={handleOnAiUpdatedPrompt}
-      onRemoveComponent={() => removeAiConvo(aiComment.id, aiComment.range)}
-      messageHistory={aiComment.messageHistory}
+      onRemoveComponent={() => removeAiConvo(aiChat.id, aiChat.range)}
+      messageHistory={aiChat.messageHistory}
       onNewMessage={(msgs) =>
-        setAiComments((prevState) => {
+        setAiChats((prevState) => {
           const newState = prevState.map((c) => {
-            if (c.id === aiComment.id) {
+            if (c.id === aiChat.id) {
               c.messageHistory = msgs;
             }
 
@@ -231,9 +151,9 @@ export function DocumentEditor(props: DocumentEditorProps) {
         })
       }
       onOpenConvo={() =>
-        setAiComments((prevState) =>
+        setAiChats((prevState) =>
           prevState.map((p) => {
-            if (p.id === aiComment.id) {
+            if (p.id === aiChat.id) {
               p.isOpen = true;
             } else {
               p.isOpen = false;
@@ -244,39 +164,28 @@ export function DocumentEditor(props: DocumentEditorProps) {
         )
       }
       onCloseConvo={() =>
-        setAiComments((prevState) =>
+        setAiChats((prevState) =>
           prevState.map((p) => {
             p.isOpen = false;
             return p;
           })
         )
       }
-      selectedText={aiComment.selectedText}
-      top={aiComment.top}
-      bottom={aiComment.bottom}
-      left={aiComment.left}
-      right={aiComment.right}
-      isOpen={aiComment.isOpen}
+      selectedText={aiChat.selectedText}
+      top={aiChat.top}
+      bottom={aiChat.bottom}
+      left={aiChat.left}
+      right={aiChat.right}
+      isOpen={aiChat.isOpen}
     />
   ));
 
   return (
     <>
       <Flex flexDirection={"row"} basis={"auto"}>
-        <QuillEditor
-          documentId={props.documentId}
-          initialHtmlData={props.documentHtml}
-          onContentChange={handleContentChange}
-          onAddComment={addAiConvo}
-          content={content}
-          documentName={props.documentName}
-          navHeight={props.navHeight}
-        />
+        <QuillEditor />
 
-        <TabPanelsComponent chatComponents={chatComponents} 
-          generalChatMessages={generalChatMessages}
-          onGeneralChatMessage={(message) => setGeneralChatMessages((prevMessages) => [...prevMessages, message])}
-        />/>
+        <TabPanelsComponent chatComponents={chatComponents} />
       </Flex>
     </>
   );

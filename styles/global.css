@@ -2,6 +2,10 @@ body {
     margin: 0;
     height: 100vh;
 }
+#custom__next {
+    overflow-y: scroll;
+  }
+
 
 #__next {
     height: 100vh;

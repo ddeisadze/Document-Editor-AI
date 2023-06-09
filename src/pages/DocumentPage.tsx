@@ -1,51 +1,43 @@
 import { useToast } from "@chakra-ui/react";
 import { useSession } from "@supabase/auth-helpers-react";
-import { saveAs } from "file-saver";
 import { useRouter } from "next/router";
-import { DeltaOperation, Delta as DeltaStatic } from "quill";
-import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
+import { Delta as DeltaStatic } from "quill";
+
 import { useState } from "react";
 import { Quill } from "react-quill";
-import utf8 from "utf8";
 import AuthLogin from "../components/auth/auth";
-import {
-  DocumentEditor,
-  aiCommentState,
-} from "../components/documents/editor/DocumentEditor";
-import NavigationBar from "../components/sidebar/verticalSidebar";
+import { DocumentEditor } from "../components/documents/editor/DocumentEditor";
 import WithSubnavigation from "../components/sidebar/horizontalNav";
-import {
-  getHtmlFromDocFileLegacy,
-  getPdfFileFromHtml,
-} from "../utility/helpers";
-import { createNewDocument } from "../utility/storageHelpers";
+import { getMarkdownFromDocFile } from "../utility/helpers";
+import { CreateNewDocument } from "../utility/storageHelpers";
 import NewResumeModal from "./ImportResumeDialog";
 import { Tabs } from "@chakra-ui/react";
+import { useSetAtom, useAtom, useAtomValue } from "jotai";
+import {
+  documentIdAtom,
+  contentAtom,
+  documentAtom,
+  aiChatsAtom,
+} from "../store/atoms/documentsAtom";
+import markdownToDelta from "markdown-to-quill-delta";
 
 const Delta = Quill.import("delta") as typeof DeltaStatic;
 
 interface documentEditorPageProps {
   documentName?: string;
-  documentContent?: DeltaStatic | DeltaOperation[];
-  documentId: string;
-  aiComments?: aiCommentState[];
-  initialHtmlContent?: string;
   blank?: boolean;
   hideNav?: boolean;
 }
 
 export default function DocumentPage(props: documentEditorPageProps) {
-  const [resumeHtml, setresumeHtml] = useState<string | undefined>(
-    props.initialHtmlContent
-  );
   const [showUpload, setShowUpload] = useState(props.blank);
   const [documentName, setDocumentName] = useState<string | undefined>(
     props.documentName
   );
-
-  const [documentId, setDocumentId] = useState<string>(props.documentId);
-  const [navHeight, setNavHeight] = useState();
-  const [lastModified, setLastModified] = useState<Date>();
+  const [documentId, setDocumentId] = useAtom(documentIdAtom);
+  const setContent = useSetAtom(contentAtom);
+  const setDocumentAtom = useSetAtom(documentAtom);
+  const aiChats = useAtomValue(aiChatsAtom);
 
   const toast = useToast();
   const session = useSession();
@@ -62,16 +54,25 @@ export default function DocumentPage(props: documentEditorPageProps) {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       // convert to html use legacy until api is fixed
-      getHtmlFromDocFileLegacy(await file.arrayBuffer()).then((html) => {
-        setresumeHtml(html ?? "");
-        const docId = new Date().getTime().toString();
+      getMarkdownFromDocFile(await file.arrayBuffer()).then((markdown) => {
+        const markdownString = markdown;
 
-        if (html) {
-          createNewDocument({
-            documentName: file.name,
-            id: docId,
-            initialHtmlData: html,
-          });
+        if (markdownString) {
+          const deltaOp = markdownToDelta(markdownString);
+          const delta = new Delta(deltaOp);
+
+          setContent(delta);
+          CreateNewDocument(
+            {
+              id: "",
+              documentName: file.name,
+              content: delta,
+            },
+            setDocumentAtom,
+            aiChats,
+            setDocumentId,
+            router
+          );
         } else {
           toast({
             title: "Error converting file to html. ",
@@ -81,45 +82,24 @@ export default function DocumentPage(props: documentEditorPageProps) {
             isClosable: true,
           });
         }
-
-        router.push(`/files/${encodeURIComponent(docId)}`);
       });
     }
   };
 
-  const onLoadEditor = (html?: string) => {
-    const docId = new Date().getTime().toString();
-
-    createNewDocument({
-      documentName: `Untitled Resume - ${docId}`,
-      id: docId,
-      initialHtmlData: html,
-    });
-
-    router.push(`/files/${encodeURIComponent(docId)}`);
+  const onCopyPaste = (html?: string) => {
+    CreateNewDocument(
+      {
+        id: "",
+        documentName: `Untitled Resume - ${documentId}`,
+      },
+      setDocumentAtom,
+      aiChats,
+      setDocumentId,
+      router
+    );
   };
 
-  const docEditorComp = (
-    <DocumentEditor
-      key={documentId}
-      documentId={documentId}
-      initialDeltaStaticContent={
-        typeof props.documentContent == typeof DeltaStatic
-          ? (props.documentContent as DeltaStatic)
-          : new Delta(props.documentContent as DeltaOperation[])
-      }
-      documentHtml={resumeHtml}
-      documentName={documentName}
-      aiComments={props.aiComments}
-      navHeight={navHeight}
-      lastModified={lastModified}
-      setLastModified={setLastModified}
-    />
-  );
-  const handleChildHeightChange = (height: any) => {
-    // Do something with the height value
-    setNavHeight(height);
-  };
+  const docEditorComp = <DocumentEditor />;
 
   return (
     <div className="App" style={{ minHeight: "100%" }}>
@@ -129,26 +109,21 @@ export default function DocumentPage(props: documentEditorPageProps) {
             isOpen={true}
             onClose={() => {}}
             onFileUpload={onFileUpload}
-            onCopyPaste={onLoadEditor}
+            onCopyPaste={onCopyPaste}
           />
         )}
 
-        {
-          props.hideNav ? (
-            docEditorComp
-          ) : (
-            <AuthLogin session={session} show={!showUpload}>
-              <WithSubnavigation
-                lastModified={lastModified}
-                onHeightChange={handleChildHeightChange}
-                documentName={documentName}
-                setDocumentName={setDocumentName}
-              />
-              {docEditorComp}
-            </AuthLogin>
-          )
-          // </NavigationBar>
-        }
+        {props.hideNav ? (
+          docEditorComp
+        ) : (
+          <AuthLogin session={session} show={!showUpload}>
+            <WithSubnavigation
+              documentName={documentName}
+              setDocumentName={setDocumentName}
+            />
+            {docEditorComp}
+          </AuthLogin>
+        )}
       </Tabs>
     </div>
   );
